@@ -161,6 +161,7 @@ return [
         'domain' => 'domain',
         'registrar' => 'registrar',
         'registrationdate' => 'registrationdate',
+        'registrationperiod' => 'registrationperiod',
         'expirydate' => 'expirydate',
         'nextduedate' => 'nextduedate',
         'firstpaymentamount' => 'firstpaymentamount',

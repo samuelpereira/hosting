@@ -270,7 +270,7 @@ class WhmcsDomainImporter
             ? $this->resolveRegistrarTldId($registrarId, $tld)
             : null;
 
-        [$intervalUnit, $intervalCount] = $this->resolveBillingInterval($registrarTldId);
+        [$intervalUnit, $intervalCount] = $this->resolveBillingInterval($row, $registrarTldId);
 
         $registeredAt = $this->parseDate($row->{$this->columns['registrationdate']} ?? null)
             ?? now()->startOfDay();
@@ -337,8 +337,13 @@ class WhmcsDomainImporter
     /**
      * @return array{0: IntervalUnit, 1: int}
      */
-    private function resolveBillingInterval(?int $registrarTldId): array
+    private function resolveBillingInterval(object $row, ?int $registrarTldId): array
     {
+        $registrationPeriod = $this->registrationPeriodFromRow($row);
+        if ($registrationPeriod !== null) {
+            return [IntervalUnit::Year, $registrationPeriod];
+        }
+
         if ($registrarTldId === null) {
             return [IntervalUnit::Year, 1];
         }
@@ -346,6 +351,22 @@ class WhmcsDomainImporter
         $tld = RegistrarTld::query()->find($registrarTldId);
 
         return Domain::billingIntervalFromRegistrarTld($tld);
+    }
+
+    private function registrationPeriodFromRow(object $row): ?int
+    {
+        if (! isset($this->columns['registrationperiod'])) {
+            return null;
+        }
+
+        $value = $row->{$this->columns['registrationperiod']} ?? null;
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $period = (int) $value;
+
+        return $period > 0 ? $period : null;
     }
 
     private function resolveAutoRenew(object $row): bool
