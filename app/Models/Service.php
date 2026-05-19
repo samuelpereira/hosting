@@ -18,7 +18,7 @@ class Service extends Model
         'first_payment_amount_minor', 'recurring_amount_minor', 'interval_unit', 'interval_count',
         'server_id', 'domain_id', 'associated_domain',
         'status', 'activated_at', 'due_at',
-        'cancelled_at', 'allocated_ram_mb', 'allocated_disk_gb', 'notes',
+        'cancelled_at', 'allocated_ram_gb', 'allocated_disk_gb', 'notes',
     ];
 
     /**

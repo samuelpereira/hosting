@@ -26,7 +26,7 @@
         </flux:card>
         <flux:card class="p-4">
             <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Default RAM') }}</flux:text>
-            <flux:heading size="lg" class="mt-1">{{ \App\Models\Server::formatRamMb($product->capacityRamMb()) }}</flux:heading>
+            <flux:heading size="lg" class="mt-1">{{ \App\Models\Server::formatRamGb($product->capacityRamGb()) }}</flux:heading>
             <flux:text class="mt-1 text-xs text-zinc-500">{{ __('Pre-fill for new services') }}</flux:text>
         </flux:card>
         <flux:card class="p-4">
@@ -169,7 +169,7 @@
                             @endif
                         </flux:table.cell>
                         <flux:table.cell>{{ $service->associated_domain ?? '—' }}</flux:table.cell>
-                        <flux:table.cell align="end">{{ \App\Models\Server::formatRamMb($service->allocated_ram_mb) }}</flux:table.cell>
+                        <flux:table.cell align="end">{{ \App\Models\Server::formatRamGb($service->allocated_ram_gb) }}</flux:table.cell>
                         <flux:table.cell align="end">{{ \App\Models\Server::formatDiskGb($service->allocated_disk_gb) }}</flux:table.cell>
                         <flux:table.cell align="end">{{ $service->due_at?->format('Y-m-d') ?? '—' }}</flux:table.cell>
                         <flux:table.cell align="end">

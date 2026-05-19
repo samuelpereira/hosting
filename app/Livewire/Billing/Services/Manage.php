@@ -56,7 +56,7 @@ class Manage extends Component
 
     public ?string $cancelled_at = null;
 
-    public ?int $allocated_ram_mb = null;
+    public ?int $allocated_ram_gb = null;
 
     public ?int $allocated_disk_gb = null;
 
@@ -130,7 +130,7 @@ class Manage extends Component
             $this->activated_at = $service->activated_at?->format('Y-m-d');
             $this->due_at = $service->due_at?->format('Y-m-d');
             $this->cancelled_at = $service->cancelled_at?->format('Y-m-d');
-            $this->allocated_ram_mb = $service->allocated_ram_mb;
+            $this->allocated_ram_gb = $service->allocated_ram_gb;
             $this->allocated_disk_gb = $service->allocated_disk_gb;
             $this->notes = (string) ($service->notes ?? '');
             $this->associated_domain = (string) ($service->associated_domain ?? '');
@@ -184,12 +184,12 @@ class Manage extends Component
         }
         $product = Product::query()
             ->whereKey($pid)
-            ->first(['id', 'default_allocated_ram_mb', 'default_allocated_disk_gb']);
+            ->first(['id', 'default_allocated_ram_gb', 'default_allocated_disk_gb']);
         if (! $product) {
             return;
         }
-        if ($product->default_allocated_ram_mb !== null) {
-            $this->allocated_ram_mb = (int) $product->default_allocated_ram_mb;
+        if ($product->default_allocated_ram_gb !== null) {
+            $this->allocated_ram_gb = (int) $product->default_allocated_ram_gb;
         }
         if ($product->default_allocated_disk_gb !== null) {
             $this->allocated_disk_gb = (int) $product->default_allocated_disk_gb;
@@ -356,7 +356,7 @@ class Manage extends Component
             'activated_at' => ['nullable', 'date'],
             'due_at' => ['nullable', 'date'],
             'cancelled_at' => ['nullable', 'date'],
-            'allocated_ram_mb' => ['nullable', 'integer', 'min:0'],
+            'allocated_ram_gb' => ['nullable', 'integer', 'min:0'],
             'allocated_disk_gb' => ['nullable', 'integer', 'min:0'],
             'notes' => ['nullable', 'string'],
             'associated_domain' => ['nullable', 'string', 'max:255'],
@@ -415,15 +415,15 @@ class Manage extends Component
             }
         }
 
-        if ($this->server_id && $this->allocated_ram_mb !== null) {
+        if ($this->server_id && $this->allocated_ram_gb !== null) {
             $server = Server::query()->findOrFail($this->server_id);
-            $cap = $server->capacityRamMb();
+            $cap = $server->capacityRamGb();
             if ($cap !== null) {
                 $used = (int) $server->allocatingServices()
                     ->when($this->service, fn ($q) => $q->where('id', '!=', $this->service->id))
-                    ->sum('allocated_ram_mb');
-                if ($used + $this->allocated_ram_mb > $cap) {
-                    $this->addError('allocated_ram_mb', __('RAM allocation exceeds server capacity.'));
+                    ->sum('allocated_ram_gb');
+                if ($used + $this->allocated_ram_gb > $cap) {
+                    $this->addError('allocated_ram_gb', __('RAM allocation exceeds server capacity.'));
 
                     return;
                 }
@@ -497,7 +497,7 @@ class Manage extends Component
                 'activated_at' => $this->activated_at,
                 'due_at' => $this->due_at,
                 'cancelled_at' => $this->cancelled_at,
-                'allocated_ram_mb' => $this->allocated_ram_mb,
+                'allocated_ram_gb' => $this->allocated_ram_gb,
                 'allocated_disk_gb' => $this->allocated_disk_gb,
                 'notes' => $this->notes !== '' ? $this->notes : null,
             ];
@@ -780,7 +780,7 @@ class Manage extends Component
                 : collect(),
             'moveClientResults' => $moveClientResults,
             'products' => Product::query()->where('is_active', true)->orderBy('name')->get([
-                'id', 'name', 'default_allocated_ram_mb', 'default_allocated_disk_gb',
+                'id', 'name', 'default_allocated_ram_gb', 'default_allocated_disk_gb',
             ]),
             'servers' => Server::query()->orderBy('name')->get(['id', 'name']),
             'statuses' => ServiceStatus::cases(),

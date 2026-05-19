@@ -79,7 +79,7 @@
                         <flux:table.cell>{{ $product->type->value }}</flux:table.cell>
                         <flux:table.cell>{{ $product->slug }}</flux:table.cell>
                         <flux:table.cell align="end" class="whitespace-normal text-sm">
-                            <div>{{ \App\Models\Server::formatRamMb($product->capacityRamMb()) }}</div>
+                            <div>{{ \App\Models\Server::formatRamGb($product->capacityRamGb()) }}</div>
                             <div class="text-zinc-500">{{ \App\Models\Server::formatDiskGb($product->capacityDiskGb()) }}</div>
                         </flux:table.cell>
                         <flux:table.cell align="center">

@@ -29,17 +29,25 @@ class Server extends Model
         return $this->hasMany(Service::class)->whereNot('status', ServiceStatus::Cancelled);
     }
 
-    public function capacityRamMb(): ?int
+    public function capacityRamGb(): ?int
     {
         $specs = $this->specs ?? [];
-        if (isset($specs['total_ram_mb']) && is_numeric($specs['total_ram_mb'])) {
-            return max(0, (int) $specs['total_ram_mb']);
-        }
         if (isset($specs['ram_gb']) && is_numeric($specs['ram_gb'])) {
-            return max(0, (int) round((float) $specs['ram_gb'] * 1024));
+            return max(0, (int) round((float) $specs['ram_gb']));
+        }
+        if (isset($specs['total_ram_mb']) && is_numeric($specs['total_ram_mb'])) {
+            return max(0, (int) round((int) $specs['total_ram_mb'] / 1024));
         }
 
         return null;
+    }
+
+    /** @deprecated Use capacityRamGb() for service allocation checks. */
+    public function capacityRamMb(): ?int
+    {
+        $gb = $this->capacityRamGb();
+
+        return $gb !== null ? $gb * 1024 : null;
     }
 
     public function capacityDiskGb(): ?int
@@ -55,11 +63,11 @@ class Server extends Model
         return null;
     }
 
-    public function usedAllocatedRamMb(): int
+    public function usedAllocatedRamGb(): int
     {
         return (int) $this->services()
             ->whereNot('status', ServiceStatus::Cancelled)
-            ->sum('allocated_ram_mb');
+            ->sum('allocated_ram_gb');
     }
 
     public function usedAllocatedDiskGb(): int
@@ -70,11 +78,11 @@ class Server extends Model
     }
 
     /** RAM allocated to services in **active** status (excludes pending/suspended/cancelled). */
-    public function allocatedRamMbActiveServices(): int
+    public function allocatedRamGbActiveServices(): int
     {
         return (int) $this->services()
             ->where('status', ServiceStatus::Active)
-            ->sum('allocated_ram_mb');
+            ->sum('allocated_ram_gb');
     }
 
     /** Disk allocated to services in **active** status. */
@@ -87,12 +95,12 @@ class Server extends Model
 
     public function ramUsagePercentActive(): ?float
     {
-        $cap = $this->capacityRamMb();
+        $cap = $this->capacityRamGb();
         if ($cap === null || $cap <= 0) {
             return null;
         }
 
-        return round(min(100, 100 * $this->allocatedRamMbActiveServices() / $cap), 1);
+        return round(min(100, 100 * $this->allocatedRamGbActiveServices() / $cap), 1);
     }
 
     public function diskUsagePercentActive(): ?float
@@ -109,7 +117,7 @@ class Server extends Model
      * One query: active-service allocation sums per server id (for list pages).
      *
      * @param  iterable<int>  $serverIds
-     * @return Collection<int, array{ram_mb: int, disk_gb: int}>
+     * @return Collection<int, array{ram_gb: int, disk_gb: int}>
      */
     public static function activeAllocationByServerIds(iterable $serverIds): Collection
     {
@@ -122,20 +130,20 @@ class Server extends Model
             ->whereIn('server_id', $ids)
             ->where('status', ServiceStatus::Active)
             ->groupBy('server_id')
-            ->selectRaw('server_id, sum(coalesce(allocated_ram_mb, 0)) as ram_mb, sum(coalesce(allocated_disk_gb, 0)) as disk_gb')
+            ->selectRaw('server_id, sum(coalesce(allocated_ram_gb, 0)) as ram_gb, sum(coalesce(allocated_disk_gb, 0)) as disk_gb')
             ->get()
             ->keyBy('server_id')
-            ->map(fn ($row) => ['ram_mb' => (int) $row->ram_mb, 'disk_gb' => (int) $row->disk_gb]);
+            ->map(fn ($row) => ['ram_gb' => (int) $row->ram_gb, 'disk_gb' => (int) $row->disk_gb]);
     }
 
-    public function freeRamMb(): ?int
+    public function freeRamGb(): ?int
     {
-        $cap = $this->capacityRamMb();
+        $cap = $this->capacityRamGb();
         if ($cap === null) {
             return null;
         }
 
-        return max(0, $cap - $this->usedAllocatedRamMb());
+        return max(0, $cap - $this->usedAllocatedRamGb());
     }
 
     public function freeDiskGb(): ?int
@@ -162,6 +170,15 @@ class Server extends Model
         }
 
         return number_format($megabytes).' '.__('MiB');
+    }
+
+    public static function formatRamGb(int|string|null $gigabytes): string
+    {
+        if ($gigabytes === null || $gigabytes === '') {
+            return '—';
+        }
+
+        return number_format((int) $gigabytes).' '.__('GB');
     }
 
     public static function formatDiskGb(int|string|null $gigabytes): string

@@ -65,10 +65,10 @@
             <flux:table.rows>
                 @forelse ($servers as $server)
                     @php
-                        $a = $activeAlloc->get($server->id) ?? ['ram_mb' => 0, 'disk_gb' => 0];
-                        $ramUsed = $a['ram_mb'];
+                        $a = $activeAlloc->get($server->id) ?? ['ram_gb' => 0, 'disk_gb' => 0];
+                        $ramUsed = $a['ram_gb'];
                         $diskUsed = $a['disk_gb'];
-                        $ramCap = $server->capacityRamMb();
+                        $ramCap = $server->capacityRamGb();
                         $diskCap = $server->capacityDiskGb();
                         $ramPct = $ramCap !== null && $ramCap > 0 ? min(100, round(100 * $ramUsed / $ramCap, 1)) : null;
                         $diskPct = $diskCap !== null && $diskCap > 0 ? min(100, round(100 * $diskUsed / $diskCap, 1)) : null;
@@ -80,12 +80,12 @@
                         </flux:table.cell>
                         <flux:table.cell>{{ $server->hostname }}</flux:table.cell>
                         <flux:table.cell align="end" class="whitespace-normal text-sm">
-                            <div>{{ \App\Models\Server::formatRamMb($ramCap) }}</div>
+                            <div>{{ \App\Models\Server::formatRamGb($ramCap) }}</div>
                             <div class="text-zinc-500">{{ \App\Models\Server::formatDiskGb($diskCap) }}</div>
                         </flux:table.cell>
                         <flux:table.cell align="end" class="whitespace-normal text-sm">
                             <div>
-                                {{ \App\Models\Server::formatRamMb($ramUsed) }}
+                                {{ \App\Models\Server::formatRamGb($ramUsed) }}
                                 @if ($ramPct !== null)
                                     <span class="text-zinc-500">· {{ $ramPct }}%</span>
                                 @elseif ($ramCap === null && $ramUsed > 0)

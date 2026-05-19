@@ -167,7 +167,7 @@ test('service save rejects ram over server capacity', function () {
         'server_id' => $server->id,
         'status' => ServiceStatus::Active,
         'currency' => 'USD',
-        'allocated_ram_mb' => 1000,
+        'allocated_ram_gb' => 1,
         'allocated_disk_gb' => null,
     ]);
 
@@ -176,9 +176,9 @@ test('service save rejects ram over server capacity', function () {
         ->set('product_id', $product->id)
         ->set('server_id', $server->id)
         ->set('status', ServiceStatus::Active->value)
-        ->set('allocated_ram_mb', 50)
+        ->set('allocated_ram_gb', 2)
         ->call('save')
-        ->assertHasErrors(['allocated_ram_mb']);
+        ->assertHasErrors(['allocated_ram_gb']);
 });
 
 test('new service prefills amounts from product prices', function () {
@@ -269,7 +269,7 @@ test('order create with service_id prefills line with product and domain', funct
         'associated_domain' => 'billing.example.net',
         'status' => ServiceStatus::Active,
         'due_at' => '2026-07-15',
-        'allocated_ram_mb' => null,
+        'allocated_ram_gb' => null,
         'allocated_disk_gb' => null,
     ]);
 
@@ -313,7 +313,7 @@ test('service edit page lists orders linked via line items', function () {
         'domain_id' => null,
         'associated_domain' => null,
         'status' => ServiceStatus::Active,
-        'allocated_ram_mb' => null,
+        'allocated_ram_gb' => null,
         'allocated_disk_gb' => null,
     ]);
     $order = Order::query()->create([
@@ -577,7 +577,7 @@ test('product show page lists overview and services', function () {
         'name' => 'Starter VPS',
         'slug' => 'starter-vps-show',
         'description' => 'A starter plan',
-        'default_allocated_ram_mb' => 2048,
+        'default_allocated_ram_gb' => 2,
         'default_allocated_disk_gb' => 50,
         'is_active' => true,
     ]);
@@ -628,7 +628,7 @@ test('server show page lists overview and services', function () {
         'server_id' => $server->id,
         'status' => ServiceStatus::Active,
         'currency' => 'EUR',
-        'allocated_ram_mb' => 4096,
+        'allocated_ram_gb' => 4,
         'allocated_disk_gb' => 50,
     ]);
 

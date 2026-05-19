@@ -23,7 +23,7 @@ class Manage extends Component
 
     public string $description = '';
 
-    public ?int $default_allocated_ram_mb = null;
+    public ?int $default_allocated_ram_gb = null;
 
     public ?int $default_allocated_disk_gb = null;
 
@@ -38,14 +38,14 @@ class Manage extends Component
         if ($product) {
             $data = $product->only([
                 'name', 'slug', 'description',
-                'default_allocated_ram_mb', 'default_allocated_disk_gb',
+                'default_allocated_ram_gb', 'default_allocated_disk_gb',
                 'is_active',
             ]);
             $this->fill(collect($data)->map(function ($value, string $key) {
                 if ($key === 'is_active') {
                     return (bool) $value;
                 }
-                if (in_array($key, ['default_allocated_ram_mb', 'default_allocated_disk_gb'], true)) {
+                if (in_array($key, ['default_allocated_ram_gb', 'default_allocated_disk_gb'], true)) {
                     return $value === null ? null : (int) $value;
                 }
 
@@ -102,7 +102,7 @@ class Manage extends Component
                 Rule::unique('products', 'slug')->ignore($this->product?->id),
             ],
             'description' => ['nullable', 'string'],
-            'default_allocated_ram_mb' => ['nullable', 'integer', 'min:0'],
+            'default_allocated_ram_gb' => ['nullable', 'integer', 'min:0'],
             'default_allocated_disk_gb' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['boolean'],
             'priceRows' => ['required', 'array', 'min:1'],
@@ -119,7 +119,7 @@ class Manage extends Component
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description !== '' ? $this->description : null,
-            'default_allocated_ram_mb' => $this->nullableNonNegativeInt($this->default_allocated_ram_mb),
+            'default_allocated_ram_gb' => $this->nullableNonNegativeInt($this->default_allocated_ram_gb),
             'default_allocated_disk_gb' => $this->nullableNonNegativeInt($this->default_allocated_disk_gb),
             'is_active' => $this->is_active,
         ];

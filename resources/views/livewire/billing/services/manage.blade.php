@@ -213,12 +213,12 @@
             <flux:input wire:model="cancelled_at" type="date" :label="__('Cancelled')" />
         </div>
         <div class="grid gap-4 sm:grid-cols-2">
-            <flux:input wire:model="allocated_ram_mb" type="number" :label="__('Allocated RAM (MiB)')" />
+            <flux:input wire:model="allocated_ram_gb" type="number" min="0" :label="__('Allocated RAM (GB)')" />
             <flux:input wire:model="allocated_disk_gb" type="number" :label="__('Allocated disk (GB)')" />
         </div>
         <flux:text class="text-sm text-zinc-500">{{ __('Choosing a product fills these from the product defaults when set; you can change them anytime.') }}</flux:text>
         <flux:textarea wire:model="notes" :label="__('Notes')" rows="3" />
-        @error('allocated_ram_mb')
+        @error('allocated_ram_gb')
             <flux:callout variant="danger">{{ $message }}</flux:callout>
         @enderror
         @error('allocated_disk_gb')

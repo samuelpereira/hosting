@@ -12,7 +12,7 @@
         <flux:input wire:model="slug" :label="__('Slug')" required />
         <flux:textarea wire:model="description" :label="__('Description')" rows="3" />
         <div class="grid gap-4 sm:grid-cols-2">
-            <flux:input wire:model="default_allocated_ram_mb" type="number" min="0" :label="__('Default RAM allocation (MiB)')" />
+            <flux:input wire:model="default_allocated_ram_gb" type="number" min="0" :label="__('Default RAM allocation (GB)')" />
             <flux:input wire:model="default_allocated_disk_gb" type="number" min="0" :label="__('Default disk allocation (GB)')" />
         </div>
         <flux:text class="text-sm text-zinc-500">{{ __('Used to pre-fill new services for this product; you can still override on each service.') }}</flux:text>

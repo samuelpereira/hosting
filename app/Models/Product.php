@@ -10,7 +10,7 @@ class Product extends Model
 {
     protected $fillable = [
         'whmcs_id', 'type', 'name', 'slug', 'description',
-        'default_allocated_ram_mb', 'default_allocated_disk_gb',
+        'default_allocated_ram_gb', 'default_allocated_disk_gb',
         'is_active',
     ];
 
@@ -29,9 +29,9 @@ class Product extends Model
         return $this->hasMany(Service::class);
     }
 
-    public function capacityRamMb(): ?int
+    public function capacityRamGb(): ?int
     {
-        return $this->default_allocated_ram_mb;
+        return $this->default_allocated_ram_gb;
     }
 
     public function capacityDiskGb(): ?int

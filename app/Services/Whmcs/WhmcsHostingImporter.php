@@ -304,7 +304,7 @@ class WhmcsHostingImporter
             'activated_at' => $this->parseDate($row->{$this->columns['regdate']} ?? null),
             'due_at' => $this->parseDate($row->{$this->columns['nextduedate']} ?? null),
             'cancelled_at' => $this->resolveCancelledAt($row),
-            'allocated_ram_mb' => $product->default_allocated_ram_mb,
+            'allocated_ram_gb' => $product->default_allocated_ram_gb,
             'allocated_disk_gb' => $allocatedDiskGb,
             'notes' => $this->nullableString($row->{$this->columns['notes']} ?? null),
         ];

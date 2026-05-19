@@ -26,9 +26,9 @@
         <flux:card class="p-4">
             <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('RAM (active services)') }}</flux:text>
             <flux:heading size="lg" class="mt-1">
-                {{ \App\Models\Server::formatRamMb($server->allocatedRamMbActiveServices()) }}
-                @if ($server->capacityRamMb() !== null)
-                    <span class="text-base font-normal text-zinc-500">/ {{ \App\Models\Server::formatRamMb($server->capacityRamMb()) }}</span>
+                {{ \App\Models\Server::formatRamGb($server->allocatedRamGbActiveServices()) }}
+                @if ($server->capacityRamGb() !== null)
+                    <span class="text-base font-normal text-zinc-500">/ {{ \App\Models\Server::formatRamGb($server->capacityRamGb()) }}</span>
                 @endif
             </flux:heading>
             @if ($server->ramUsagePercentActive() !== null)
@@ -77,7 +77,7 @@
             <div>
                 <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Capacity (specs)') }}</flux:text>
                 <flux:text class="mt-1 font-medium text-zinc-800 dark:text-white">
-                    {{ \App\Models\Server::formatRamMb($server->capacityRamMb()) }}
+                    {{ \App\Models\Server::formatRamGb($server->capacityRamGb()) }}
                     · {{ \App\Models\Server::formatDiskGb($server->capacityDiskGb()) }}
                 </flux:text>
             </div>
@@ -118,7 +118,7 @@
                             <flux:link :href="route('billing.clients.show', $service->client_id)" wire:navigate>{{ $service->client?->firstAndLastName() }}</flux:link>
                         </flux:table.cell>
                         <flux:table.cell>{{ $service->associated_domain ?? '—' }}</flux:table.cell>
-                        <flux:table.cell align="end">{{ \App\Models\Server::formatRamMb($service->allocated_ram_mb) }}</flux:table.cell>
+                        <flux:table.cell align="end">{{ \App\Models\Server::formatRamGb($service->allocated_ram_gb) }}</flux:table.cell>
                         <flux:table.cell align="end">{{ \App\Models\Server::formatDiskGb($service->allocated_disk_gb) }}</flux:table.cell>
                         <flux:table.cell align="end">{{ $service->due_at?->format('Y-m-d') ?? '—' }}</flux:table.cell>
                         <flux:table.cell align="end">

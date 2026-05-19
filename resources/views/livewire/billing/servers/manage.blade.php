@@ -10,9 +10,9 @@
                 <div>
                     <flux:text class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('RAM') }}</flux:text>
                     <flux:heading size="md" class="mt-1">
-                        {{ \App\Models\Server::formatRamMb($server->allocatedRamMbActiveServices()) }}
-                        @if ($server->capacityRamMb() !== null)
-                            <span class="text-base font-normal text-zinc-500">/ {{ \App\Models\Server::formatRamMb($server->capacityRamMb()) }}</span>
+                        {{ \App\Models\Server::formatRamGb($server->allocatedRamGbActiveServices()) }}
+                        @if ($server->capacityRamGb() !== null)
+                            <span class="text-base font-normal text-zinc-500">/ {{ \App\Models\Server::formatRamGb($server->capacityRamGb()) }}</span>
                             @if ($server->ramUsagePercentActive() !== null)
                                 <span class="text-base font-normal text-zinc-500">({{ $server->ramUsagePercentActive() }}%)</span>
                             @endif
