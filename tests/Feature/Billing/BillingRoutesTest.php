@@ -104,6 +104,7 @@ test('tld edit syncs price rows on save', function () {
                 'term_years' => 1,
                 'currency' => 'EUR',
                 'amount_input' => '12.50',
+                'domain_cost_input' => '8.00',
                 'is_active' => true,
             ],
             [
@@ -112,6 +113,7 @@ test('tld edit syncs price rows on save', function () {
                 'term_years' => 2,
                 'currency' => 'EUR',
                 'amount_input' => '20.00',
+                'domain_cost_input' => '15.00',
                 'is_active' => true,
             ],
         ])
@@ -121,11 +123,13 @@ test('tld edit syncs price rows on save', function () {
 
     $tld->refresh();
     expect($tld->prices)->toHaveCount(2);
-    expect($tld->prices->firstWhere('id', $existing->id)?->amount_minor)->toBe(1250);
+    expect($tld->prices->firstWhere('id', $existing->id)?->amount_minor)->toBe(1250)
+        ->and($tld->prices->firstWhere('id', $existing->id)?->domain_cost_minor)->toBe(800);
     expect($tld->prices->contains(
         fn (RegistrarTldPrice $p) => $p->operation === RegistrarTldPriceOperation::Transfer
             && $p->term_years === 2
             && $p->amount_minor === 2000
+            && $p->domain_cost_minor === 1500
     ))->toBeTrue();
     expect($tld->prices->contains(
         fn (RegistrarTldPrice $p) => $p->operation === RegistrarTldPriceOperation::Renew

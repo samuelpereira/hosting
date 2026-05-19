@@ -88,6 +88,8 @@ class Manage extends Component
 
     public string $domain_recurring_amount_input = '';
 
+    public string $domain_cost_input = '';
+
     public string $domain_interval_unit = 'year';
 
     public int $domain_interval_count = 1;
@@ -251,6 +253,9 @@ class Manage extends Component
         if (trim($this->domain_first_payment_amount_input) === '') {
             $this->domain_first_payment_amount_input = number_format($price->amount_minor / 100, 2, '.', '');
         }
+        if ($price->domain_cost_minor !== null) {
+            $this->domain_cost_input = number_format($price->domain_cost_minor / 100, 2, '.', '');
+        }
         $this->applyDomainBillingIntervalFromRegistrar($price);
     }
 
@@ -404,6 +409,7 @@ class Manage extends Component
                 'domain_currency' => ['required', 'string', 'size:3'],
                 'domain_first_payment_amount_input' => $amountRule,
                 'domain_recurring_amount_input' => $amountRule,
+                'domain_cost_input' => $amountRule,
                 'domain_interval_unit' => ['required', Rule::enum(IntervalUnit::class)],
                 'domain_interval_count' => ['required', 'integer', 'min:1', 'max:120'],
             ]);
@@ -460,6 +466,7 @@ class Manage extends Component
                     'currency' => strtoupper($this->domain_currency),
                     'first_payment_amount_minor' => $this->parseAmountMinor($this->domain_first_payment_amount_input),
                     'recurring_amount_minor' => $this->parseAmountMinor($this->domain_recurring_amount_input),
+                    'domain_cost_minor' => $this->resolveDomainCostMinorFromSelectedPrice(),
                     'interval_unit' => IntervalUnit::from($this->domain_interval_unit),
                     'interval_count' => max(1, (int) $this->domain_interval_count),
                     'registered_at' => $this->domain_registered_at,
@@ -665,6 +672,20 @@ class Manage extends Component
         }
 
         return (int) round((float) $trimmed * 100);
+    }
+
+    private function resolveDomainCostMinorFromSelectedPrice(): ?int
+    {
+        if (! $this->domain_registrar_tld_price_id) {
+            return $this->parseAmountMinor($this->domain_cost_input);
+        }
+
+        $price = RegistrarTldPrice::query()->find($this->domain_registrar_tld_price_id);
+        if ($price?->domain_cost_minor !== null) {
+            return (int) $price->domain_cost_minor;
+        }
+
+        return $this->parseAmountMinor($this->domain_cost_input);
     }
 
     private function applyDomainBillingIntervalFromRegistrar(?RegistrarTldPrice $price = null): void

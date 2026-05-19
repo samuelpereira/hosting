@@ -157,6 +157,9 @@
                             <option value="{{ $pp->id }}">
                                 {{ $pp->term_years }} {{ __('yr') }}
                                 · {{ $pp->currency }} {{ number_format($pp->amount_minor / 100, 2) }}
+                                @if ($pp->domain_cost_minor !== null)
+                                    ({{ __('cost') }} {{ number_format($pp->domain_cost_minor / 100, 2) }})
+                                @endif
                             </option>
                         @endforeach
                     </flux:select>
@@ -171,9 +174,10 @@
                     @endforeach
                 </flux:select>
                 <flux:input wire:model="domain_currency" maxlength="3" :label="__('Currency')" required />
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div class="grid gap-4 sm:grid-cols-3">
                     <flux:input wire:model="domain_first_payment_amount_input" :label="__('First payment amount')" />
                     <flux:input wire:model="domain_recurring_amount_input" :label="__('Recurring amount')" />
+                    <flux:input wire:model="domain_cost_input" :label="__('Domain cost')" />
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <flux:select wire:model="domain_interval_unit" :label="__('Domain billing interval')">

@@ -15,7 +15,7 @@ class Domain extends Model
 {
     protected $fillable = [
         'whmcs_id', 'client_id', 'registrar_id', 'registrar_tld_id', 'registrar_tld_price_id', 'fqdn',
-        'status', 'currency', 'first_payment_amount_minor', 'recurring_amount_minor',
+        'status', 'currency', 'first_payment_amount_minor', 'recurring_amount_minor', 'domain_cost_minor',
         'interval_unit', 'interval_count',
         'registered_at', 'expires_at', 'due_at',
         'auto_renew', 'notes',

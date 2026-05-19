@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class RegistrarTldPrice extends Model
 {
     protected $fillable = [
-        'registrar_tld_id', 'operation', 'term_years', 'amount_minor', 'currency', 'is_active',
+        'registrar_tld_id', 'operation', 'term_years', 'amount_minor', 'domain_cost_minor', 'currency', 'is_active',
     ];
 
     protected function casts(): array

@@ -18,7 +18,7 @@ class Manage extends Component
 
     public string $tld = '';
 
-    /** @var array<int, array{id: ?int, operation: string, term_years: int, currency: string, amount_input: string, is_active: bool}> */
+    /** @var array<int, array{id: ?int, operation: string, term_years: int, currency: string, amount_input: string, domain_cost_input: string, is_active: bool}> */
     public array $priceRows = [];
 
     public function mount(?RegistrarTld $registrarTld = null): void
@@ -33,6 +33,9 @@ class Manage extends Component
                 'term_years' => (int) $p->term_years,
                 'currency' => $p->currency,
                 'amount_input' => number_format($p->amount_minor / 100, 2, '.', ''),
+                'domain_cost_input' => $p->domain_cost_minor !== null
+                    ? number_format($p->domain_cost_minor / 100, 2, '.', '')
+                    : '',
                 'is_active' => $p->is_active,
             ])->all();
         }
@@ -49,6 +52,7 @@ class Manage extends Component
             'term_years' => 1,
             'currency' => 'EUR',
             'amount_input' => '0.00',
+            'domain_cost_input' => '',
             'is_active' => true,
         ];
     }
@@ -78,6 +82,7 @@ class Manage extends Component
             'priceRows.*.term_years' => ['required', 'integer', 'min:1', 'max:10'],
             'priceRows.*.currency' => ['required', 'string', 'size:3'],
             'priceRows.*.amount_input' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'priceRows.*.domain_cost_input' => ['nullable', 'regex:/^\d+(\.\d{1,2})?$/'],
             'priceRows.*.is_active' => ['boolean'],
         ]);
 
@@ -115,6 +120,7 @@ class Manage extends Component
                 'operation' => RegistrarTldPriceOperation::from($row['operation']),
                 'term_years' => (int) $row['term_years'],
                 'amount_minor' => $minor,
+                'domain_cost_minor' => $this->parseOptionalAmountMinor($row['domain_cost_input'] ?? ''),
                 'currency' => strtoupper($row['currency']),
                 'is_active' => (bool) $row['is_active'],
             ];
@@ -133,6 +139,16 @@ class Manage extends Component
 
         Flux::toast(variant: 'success', text: $this->registrarTld ? __('TLD updated.') : __('TLD created.'));
         $this->redirect(route('billing.registrar-tlds.edit', $tld), navigate: true);
+    }
+
+    private function parseOptionalAmountMinor(string $input): ?int
+    {
+        $trimmed = trim($input);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        return (int) round((float) $trimmed * 100);
     }
 
     public function render()

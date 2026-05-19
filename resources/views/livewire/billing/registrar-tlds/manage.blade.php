@@ -26,8 +26,9 @@
                         </flux:select>
                         <flux:input wire:model="priceRows.{{ $index }}.term_years" type="number" min="1" max="10" :label="__('Term (years)')" />
                         <flux:input wire:model="priceRows.{{ $index }}.currency" maxlength="3" :label="__('Currency')" />
-                        <flux:input wire:model="priceRows.{{ $index }}.amount_input" :label="__('Amount (major)')" />
-                        <div class="flex items-end justify-between gap-2 sm:col-span-2">
+                        <flux:input wire:model="priceRows.{{ $index }}.amount_input" :label="__('Sell price')" />
+                        <flux:input wire:model="priceRows.{{ $index }}.domain_cost_input" :label="__('Domain cost')" placeholder="{{ __('Optional') }}" />
+                        <div class="flex items-end justify-between gap-2 sm:col-span-2 lg:col-span-3">
                             <flux:checkbox wire:model="priceRows.{{ $index }}.is_active" :label="__('Active')" />
                             <flux:button type="button" size="sm" variant="ghost" wire:click="removePriceRow({{ $index }})">{{ __('Remove') }}</flux:button>
                         </div>
