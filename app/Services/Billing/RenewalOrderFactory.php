@@ -100,6 +100,10 @@ class RenewalOrderFactory
     {
         $domain->loadMissing('client');
 
+        if (! $domain->isEligibleForAutomatedRenewal()) {
+            return null;
+        }
+
         $client = $domain->client;
         if ($client === null) {
             return null;
@@ -194,7 +198,7 @@ class RenewalOrderFactory
         if ($service->domain_id && $service->domain) {
             $domain = $service->domain;
             $domainAmountMinor = (int) ($domain->recurring_amount_minor ?? $domain->first_payment_amount_minor ?? 0);
-            if ($domainAmountMinor > 0 && $domain->status->isEligibleForRenewalOrder()) {
+            if ($domainAmountMinor > 0 && $domain->isEligibleForAutomatedRenewal()) {
                 $lines[] = [
                     'type' => OrderItemType::Domain,
                     'description' => $domain->renewalOrderLineDescription(),

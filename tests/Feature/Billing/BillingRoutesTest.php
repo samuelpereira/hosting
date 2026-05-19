@@ -44,6 +44,7 @@ test('billing index routes respond for verified users', function (string $route)
     'billing.registrar-tlds.index',
     'billing.domains.index',
     'billing.orders.index',
+    'billing.reports.integrated-position',
     'billing.transactions.index',
     'billing.email-templates.index',
     'billing.company.edit',

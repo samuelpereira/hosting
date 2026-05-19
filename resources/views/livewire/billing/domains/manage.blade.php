@@ -90,10 +90,9 @@
         </flux:select>
         <flux:input wire:model="fqdn" :label="__('FQDN')" required />
         <flux:input wire:model="currency" maxlength="3" :label="__('Currency')" required />
-        <div class="grid gap-4 sm:grid-cols-3">
+        <div class="grid gap-4 sm:grid-cols-2">
             <flux:input wire:model="first_payment_amount_input" :label="__('First payment amount')" />
             <flux:input wire:model="recurring_amount_input" :label="__('Recurring amount')" />
-            <flux:input wire:model="domain_cost_input" :label="__('Domain cost')" />
         </div>
         <div class="grid gap-4 sm:grid-cols-2">
             <flux:select wire:model="interval_unit" :label="__('Billing interval')">
@@ -103,7 +102,7 @@
             </flux:select>
             <flux:input wire:model="interval_count" type="number" min="1" max="120" :label="__('Every')" />
         </div>
-        <flux:text class="text-sm text-zinc-500">{{ __('Defaults from the selected TLD when you pick a registrar TLD.') }}</flux:text>
+        <flux:text class="text-sm text-zinc-500">{{ __('Billing interval defaults from the selected TLD. Registrar cost is configured on the TLD price.') }}</flux:text>
         <div class="grid gap-4 sm:grid-cols-2">
             <flux:input wire:model="registered_at" type="date" :label="__('Registered at')" required />
             <flux:input wire:model="expires_at" type="date" :label="__('Expires at')" required />

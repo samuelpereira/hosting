@@ -33,6 +33,9 @@
                     <flux:sidebar.item icon="banknotes" :href="route('billing.transactions.index')" :current="request()->routeIs('billing.transactions.*')" wire:navigate>
                         {{ __('Transactions') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="chart-bar" :href="route('billing.reports.integrated-position')" :current="request()->routeIs('billing.reports.*')" wire:navigate>
+                        {{ __('Reports') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
 
                 <flux:sidebar.group :heading="__('Catalog')" class="grid">

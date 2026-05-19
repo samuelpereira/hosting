@@ -13,3 +13,9 @@ test('maps WHMCS domain status strings', function (string $whmcs, DomainStatus $
     ['Cancelled', DomainStatus::Cancelled],
     ['Expired', DomainStatus::Expired],
 ]);
+
+test('isEligibleForRenewalOrder allows active and expired only', function () {
+    expect(DomainStatus::Active->isEligibleForRenewalOrder())->toBeTrue()
+        ->and(DomainStatus::Expired->isEligibleForRenewalOrder())->toBeTrue()
+        ->and(DomainStatus::Cancelled->isEligibleForRenewalOrder())->toBeFalse();
+});

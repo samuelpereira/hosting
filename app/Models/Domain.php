@@ -15,7 +15,7 @@ class Domain extends Model
 {
     protected $fillable = [
         'whmcs_id', 'client_id', 'registrar_id', 'registrar_tld_id', 'registrar_tld_price_id', 'fqdn',
-        'status', 'currency', 'first_payment_amount_minor', 'recurring_amount_minor', 'domain_cost_minor',
+        'status', 'currency', 'first_payment_amount_minor', 'recurring_amount_minor',
         'interval_unit', 'interval_count',
         'registered_at', 'expires_at', 'due_at',
         'auto_renew', 'notes',
@@ -57,6 +57,94 @@ class Domain extends Model
     public function services(): HasMany
     {
         return $this->hasMany(Service::class);
+    }
+
+    public function isEligibleForAutomatedRenewal(): bool
+    {
+        return $this->auto_renew && $this->status->isEligibleForRenewalOrder();
+    }
+
+    /** Renewal price normalized to a monthly amount (minor units). */
+    public function monthlyRevenueMinor(): int
+    {
+        return $this->normalizeAmountToMonthlyMinor($this->recurring_amount_minor);
+    }
+
+    /** Renewal price normalized to a yearly amount (minor units). */
+    public function yearlyRevenueMinor(): int
+    {
+        return $this->normalizeAmountToYearlyMinor($this->recurring_amount_minor);
+    }
+
+    /** Registrar cost from the linked TLD price (or matching renew price), monthly (minor units). */
+    public function monthlyCostMinor(): int
+    {
+        $price = $this->registrarTldPrice ?? $this->resolveRenewPriceForCost();
+
+        return $price?->monthlyDomainCostMinor() ?? 0;
+    }
+
+    /** Registrar cost normalized to a yearly amount (minor units). */
+    public function yearlyCostMinor(): int
+    {
+        $price = $this->registrarTldPrice ?? $this->resolveRenewPriceForCost();
+        if ($price === null || $price->domain_cost_minor === null) {
+            return 0;
+        }
+
+        $termYears = max(1, (int) $price->term_years);
+
+        return (int) round((int) $price->domain_cost_minor / $termYears);
+    }
+
+    private function resolveRenewPriceForCost(): ?RegistrarTldPrice
+    {
+        if ($this->registrar_tld_id === null) {
+            return null;
+        }
+
+        $termYears = ($this->interval_unit ?? IntervalUnit::Year) === IntervalUnit::Year
+            ? max(1, (int) $this->interval_count)
+            : 1;
+
+        return RegistrarTldPrice::query()
+            ->where('registrar_tld_id', $this->registrar_tld_id)
+            ->where('operation', RegistrarTldPriceOperation::Renew)
+            ->where('is_active', true)
+            ->where('term_years', $termYears)
+            ->first()
+            ?? RegistrarTldPrice::query()
+                ->where('registrar_tld_id', $this->registrar_tld_id)
+                ->where('operation', RegistrarTldPriceOperation::Renew)
+                ->where('is_active', true)
+                ->orderBy('term_years')
+                ->first();
+    }
+
+    private function normalizeAmountToMonthlyMinor(?int $amountMinor): int
+    {
+        if ($amountMinor === null) {
+            return 0;
+        }
+
+        $months = match ($this->interval_unit ?? IntervalUnit::Year) {
+            IntervalUnit::Month => max(1, (int) $this->interval_count),
+            IntervalUnit::Year => max(1, (int) $this->interval_count) * 12,
+        };
+
+        return (int) round((int) $amountMinor / $months);
+    }
+
+    private function normalizeAmountToYearlyMinor(?int $amountMinor): int
+    {
+        if ($amountMinor === null) {
+            return 0;
+        }
+
+        return match ($this->interval_unit ?? IntervalUnit::Year) {
+            IntervalUnit::Month => (int) round((int) $amountMinor * 12 / max(1, (int) $this->interval_count)),
+            IntervalUnit::Year => (int) round((int) $amountMinor / max(1, (int) $this->interval_count)),
+        };
     }
 
     public function advanceByBillingInterval(CarbonInterface $date): Carbon

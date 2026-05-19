@@ -35,6 +35,7 @@ function createTestDomain(
     \Carbon\CarbonInterface $dueAt,
     int $recurringMinor = 1_000,
     DomainStatus $status = DomainStatus::Active,
+    bool $autoRenew = true,
 ): Domain {
     return Domain::query()->create([
         'client_id' => $client->id,
@@ -48,6 +49,7 @@ function createTestDomain(
         'registered_at' => now()->subYear(),
         'expires_at' => $dueAt,
         'due_at' => $dueAt,
+        'auto_renew' => $autoRenew,
     ]);
 }
 
@@ -336,6 +338,92 @@ test('service renewal order omits synced domain when domain is not active or exp
     $order = Order::query()->where('client_id', $client->id)->first();
     expect($order->items)->toHaveCount(1)
         ->and($order->items->first()->type)->toBe(OrderItemType::Service);
+
+    Carbon::setTestNow();
+});
+
+test('does not create standalone domain renewal order when auto renew is disabled', function () {
+    Carbon::setTestNow('2026-05-19 09:00:00');
+
+    $client = Client::query()->create([
+        'name' => 'No Auto Renew',
+        'email' => 'no-auto@example.test',
+        'currency' => 'EUR',
+        'is_active' => true,
+    ]);
+
+    $dueAt = now()->addDays(30)->startOfDay();
+    $registrar = createTestRegistrar();
+    createTestDomain($client, $registrar, 'no-auto.test', $dueAt, 2_000, DomainStatus::Active, autoRenew: false);
+
+    $result = app(BillingAutomationRunner::class)->run(force: true);
+
+    expect($result['orders_created'])->toBe(0);
+
+    Carbon::setTestNow();
+});
+
+test('service renewal order omits synced domain when auto renew is disabled', function () {
+    Carbon::setTestNow('2026-05-19 09:00:00');
+
+    $client = Client::query()->create([
+        'name' => 'No Auto Renew Bundle',
+        'email' => 'no-auto-bundle@example.test',
+        'currency' => 'EUR',
+        'is_active' => true,
+    ]);
+
+    $product = Product::query()->create([
+        'type' => \App\Enums\ProductType::Hosting,
+        'name' => 'Plan',
+        'slug' => 'plan-no-auto-bundle',
+        'is_active' => true,
+    ]);
+
+    $dueAt = now()->addDays(14)->startOfDay();
+    $registrar = createTestRegistrar();
+    $domain = createTestDomain($client, $registrar, 'no-auto-bundle.test', $dueAt, 1_500, autoRenew: false);
+
+    Service::query()->create([
+        'client_id' => $client->id,
+        'product_id' => $product->id,
+        'currency' => 'EUR',
+        'recurring_amount_minor' => 10_000,
+        'interval_unit' => 'month',
+        'interval_count' => 1,
+        'domain_id' => $domain->id,
+        'status' => ServiceStatus::Active,
+        'due_at' => $dueAt,
+    ]);
+
+    $result = app(BillingAutomationRunner::class)->run(force: true);
+
+    expect($result['orders_created'])->toBe(1);
+
+    $order = Order::query()->where('client_id', $client->id)->first();
+    expect($order->items)->toHaveCount(1)
+        ->and($order->items->first()->type)->toBe(OrderItemType::Service);
+
+    Carbon::setTestNow();
+});
+
+test('creates standalone domain renewal order for expired domain with auto renew', function () {
+    Carbon::setTestNow('2026-05-19 09:00:00');
+
+    $client = Client::query()->create([
+        'name' => 'Expired Auto',
+        'email' => 'expired-auto@example.test',
+        'currency' => 'EUR',
+        'is_active' => true,
+    ]);
+
+    $dueAt = now()->addDays(30)->startOfDay();
+    $registrar = createTestRegistrar();
+    createTestDomain($client, $registrar, 'expired-auto.test', $dueAt, 2_000, DomainStatus::Expired, autoRenew: true);
+
+    $result = app(BillingAutomationRunner::class)->run(force: true);
+
+    expect($result['orders_created'])->toBe(1);
 
     Carbon::setTestNow();
 });

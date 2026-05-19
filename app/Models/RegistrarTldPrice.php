@@ -30,4 +30,16 @@ class RegistrarTldPrice extends Model
     {
         return [IntervalUnit::Year, max(1, (int) $this->term_years)];
     }
+
+    /** Registrar cost for this price term, normalized to a monthly amount (minor units). */
+    public function monthlyDomainCostMinor(): int
+    {
+        if ($this->domain_cost_minor === null) {
+            return 0;
+        }
+
+        $months = max(1, (int) $this->term_years) * 12;
+
+        return (int) round((int) $this->domain_cost_minor / $months);
+    }
 }

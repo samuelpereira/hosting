@@ -26,6 +26,7 @@ use App\Livewire\Billing\Services\Index as ServicesIndex;
 use App\Livewire\Billing\Services\Manage as ServicesManage;
 use App\Http\Controllers\Billing\ClientEmailLogAttachmentController;
 use App\Http\Controllers\Billing\TransactionDocumentController;
+use App\Livewire\Billing\Reports\IntegratedPosition as ReportsIntegratedPosition;
 use App\Livewire\Billing\Transactions\Index as TransactionsIndex;
 use App\Livewire\Billing\Transactions\Manage as TransactionsManage;
 use Illuminate\Support\Facades\Route;
@@ -68,6 +69,8 @@ Route::middleware(['auth', 'verified'])->prefix('billing')->name('billing.')->gr
     Route::livewire('orders', OrdersIndex::class)->name('orders.index');
     Route::livewire('orders/create', OrdersManage::class)->name('orders.create');
     Route::livewire('orders/{order}/edit', OrdersManage::class)->name('orders.edit');
+
+    Route::livewire('reports/integrated-position', ReportsIntegratedPosition::class)->name('reports.integrated-position');
 
     Route::livewire('transactions', TransactionsIndex::class)->name('transactions.index');
     Route::livewire('transactions/create', TransactionsManage::class)->name('transactions.create');

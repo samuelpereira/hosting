@@ -34,8 +34,6 @@ class Manage extends Component
 
     public string $recurring_amount_input = '';
 
-    public string $domain_cost_input = '';
-
     public string $interval_unit = 'year';
 
     public int $interval_count = 1;
@@ -71,9 +69,6 @@ class Manage extends Component
                 : '';
             $this->recurring_amount_input = $domain->recurring_amount_minor !== null
                 ? number_format($domain->recurring_amount_minor / 100, 2, '.', '')
-                : '';
-            $this->domain_cost_input = $domain->domain_cost_minor !== null
-                ? number_format($domain->domain_cost_minor / 100, 2, '.', '')
                 : '';
             $this->interval_unit = $domain->interval_unit->value;
             $this->interval_count = max(1, (int) $domain->interval_count);
@@ -210,7 +205,6 @@ class Manage extends Component
             'currency' => ['required', 'string', 'size:3'],
             'first_payment_amount_input' => $amountRule,
             'recurring_amount_input' => $amountRule,
-            'domain_cost_input' => $amountRule,
             'interval_unit' => ['required', Rule::enum(IntervalUnit::class)],
             'interval_count' => ['required', 'integer', 'min:1', 'max:120'],
             'registered_at' => ['required', 'date'],
@@ -244,7 +238,6 @@ class Manage extends Component
             'currency' => strtoupper($this->currency),
             'first_payment_amount_minor' => $this->parseAmountMinor($this->first_payment_amount_input),
             'recurring_amount_minor' => $this->parseAmountMinor($this->recurring_amount_input),
-            'domain_cost_minor' => $this->parseAmountMinor($this->domain_cost_input),
             'interval_unit' => IntervalUnit::from($this->interval_unit),
             'interval_count' => max(1, (int) $this->interval_count),
             'registered_at' => $this->registered_at,

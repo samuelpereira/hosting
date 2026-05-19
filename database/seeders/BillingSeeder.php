@@ -329,12 +329,12 @@ class BillingSeeder extends Seeder
                 'name' => 'houston',
                 'panel_url' => 'https://houston.hosted.pt:10000',
                 'status' => ServerStatus::Active,
-                'cost_amount_minor' => 77_20,
+                'cost_amount_minor' => 28_67,
                 'cost_currency' => 'EUR',
                 'specs' => [
-                    'cpu' => '16 vCPU',
-                    'ram_gb' => 128,
-                    'disk_gb' => 2000,
+                    'cpu' => '4 vCPU',
+                    'ram_gb' => 16,
+                    'disk_gb' => 500,
                 ],
             ],
         );
@@ -345,12 +345,12 @@ class BillingSeeder extends Seeder
                 'name' => 'eagle',
                 'panel_url' => 'https://eagle.hosted.pt:10000',
                 'status' => ServerStatus::Active,
-                'cost_amount_minor' => 41_70,
+                'cost_amount_minor' => 42_90,
                 'cost_currency' => 'EUR',
                 'specs' => [
-                    'cpu' => '12 vCPU',
-                    'ram_gb' => 64,
-                    'disk_gb' => 1000,
+                    'cpu' => '8 vCPU',
+                    'ram_gb' => 32,
+                    'disk_gb' => 800,
                 ],
             ],
         );
@@ -361,7 +361,7 @@ class BillingSeeder extends Seeder
                 'name' => 'cheetah',
                 'panel_url' => 'https://cheetah.hosted.pt:10000',
                 'status' => ServerStatus::Active,
-                'cost_amount_minor' => 0_00,
+                'cost_amount_minor' => 25_27,
                 'cost_currency' => 'EUR',
                 'specs' => [
                     'cpu' => '4 vCPU',
@@ -377,7 +377,7 @@ class BillingSeeder extends Seeder
                 'name' => 'leopard',
                 'panel_url' => 'https://leopard.hosted.pt:10000',
                 'status' => ServerStatus::Active,
-                'cost_amount_minor' => 0_00,
+                'cost_amount_minor' => 25_27,
                 'cost_currency' => 'EUR',
                 'specs' => [
                     'cpu' => '4 vCPU',
@@ -393,7 +393,7 @@ class BillingSeeder extends Seeder
                 'name' => 'allms',
                 'panel_url' => 'https://allms.hosted.pt:10000',
                 'status' => ServerStatus::Active,
-                'cost_amount_minor' => 39_00,
+                'cost_amount_minor' => 41_87,
                 'cost_currency' => 'EUR',
                 'specs' => [
                     'cpu' => '12 vCPU',
@@ -408,12 +408,27 @@ class BillingSeeder extends Seeder
             [
                 'name' => 'nka',
                 'status' => ServerStatus::Active,
-                'cost_amount_minor' => 41_10,
+                'cost_amount_minor' => 42_30,
                 'cost_currency' => 'EUR',
                 'specs' => [
                     'cpu' => '12 vCPU',
                     'ram_gb' => 64,
                     'disk_gb' => 512,
+                ],
+            ],
+        );
+
+        Server::query()->firstOrCreate(
+            ['hostname' => 'windows.fmb.pt'],
+            [
+                'name' => 'WS25',
+                'status' => ServerStatus::Active,
+                'cost_amount_minor' => 25_05,
+                'cost_currency' => 'EUR',
+                'specs' => [
+                    'cpu' => '6 vCPU',
+                    'ram_gb' => 12,
+                    'disk_gb' => 200,
                 ],
             ],
         );
