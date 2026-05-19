@@ -1,32 +1,34 @@
-FROM php:8.3.23-apache
+FROM php:8.4.21-apache-bookworm
 
 RUN apt update
 RUN apt upgrade -y
 
 # 1. development packages
-RUN apt-get install -y \
-    git \
-    zip \
-    curl \
-    sudo \
-    unzip \
+RUN apt-get update && apt-get install -y \
+    git zip curl sudo unzip \
     libicu-dev \
     libbz2-dev \
     libpng-dev \
     libjpeg-dev \
-    libmcrypt-dev \
     libreadline-dev \
     libfreetype6-dev \
     libgmp-dev \
     libzip-dev \
     libonig-dev \
-    libc-client-dev libkrb5-dev \
     g++ \
-    ca-certificates gnupg
+    ca-certificates \
+    gnupg
+
+RUN apt-get install -y \
+    libc-client-dev \
+    libkrb5-dev \
+    libssl-dev \
+    && pecl install imap \
+    && docker-php-ext-enable imap
 
 RUN mkdir -p /etc/apt/keyrings
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
 RUN apt-get update
 RUN apt-get install -y nodejs
 
@@ -41,7 +43,7 @@ RUN a2enmod rewrite headers
 # 4. start with base php config, then add extensions
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
-RUN docker-php-ext-configure imap --with-kerberos --with-imap-ssl
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
 RUN docker-php-ext-install \
     bz2 \
@@ -54,8 +56,7 @@ RUN docker-php-ext-install \
     pdo_mysql \
     zip \
     gd \
-    gmp \
-    imap
+    gmp
 
 # 5. composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

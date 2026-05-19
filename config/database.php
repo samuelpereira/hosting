@@ -84,6 +84,22 @@ return [
             ]) : [],
         ],
 
+        'whmcs' => [
+            'driver' => env('WHMCS_DB_DRIVER', 'mysql'),
+            'host' => env('WHMCS_DB_HOST', '127.0.0.1'),
+            'port' => env('WHMCS_DB_PORT', '3306'),
+            'database' => env('WHMCS_DB_DATABASE', 'whmcs'),
+            'username' => env('WHMCS_DB_USERNAME', 'root'),
+            'password' => env('WHMCS_DB_PASSWORD', ''),
+            'unix_socket' => env('WHMCS_DB_SOCKET', ''),
+            'charset' => env('WHMCS_DB_CHARSET', 'utf8mb4'),
+            'collation' => env('WHMCS_DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DB_URL'),

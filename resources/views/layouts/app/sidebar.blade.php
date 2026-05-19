@@ -16,19 +16,59 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Billing')" class="grid">
+                    <flux:sidebar.item icon="users" :href="route('billing.clients.index')" :current="request()->routeIs('billing.clients.*')" wire:navigate>
+                        {{ __('Clients') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="bolt" :href="route('billing.services.index')" :current="request()->routeIs('billing.services.*')" wire:navigate>
+                        {{ __('Services') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="link" :href="route('billing.domains.index')" :current="request()->routeIs('billing.domains.*')" wire:navigate>
+                        {{ __('Domains') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="document-text" :href="route('billing.orders.index')" :current="request()->routeIs('billing.orders.*')" wire:navigate>
+                        {{ __('Orders') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="banknotes" :href="route('billing.transactions.index')" :current="request()->routeIs('billing.transactions.*')" wire:navigate>
+                        {{ __('Transactions') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Catalog')" class="grid">
+                    <flux:sidebar.item icon="server" :href="route('billing.servers.index')" :current="request()->routeIs('billing.servers.*')" wire:navigate>
+                        {{ __('Servers') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="cube" :href="route('billing.products.index')" :current="request()->routeIs('billing.products.*')" wire:navigate>
+                        {{ __('Products') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="globe-alt" :href="route('billing.registrars.index')" :current="request()->routeIs('billing.registrars.*')" wire:navigate>
+                        {{ __('Registrars') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="tag" :href="route('billing.registrar-tlds.index')" :current="request()->routeIs('billing.registrar-tlds.*')" wire:navigate>
+                        {{ __('Registrar TLDs') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Setup')" class="grid">
+                    <flux:sidebar.item icon="building-office" :href="route('billing.company.edit')" :current="request()->routeIs('billing.company.*')" wire:navigate>
+                        {{ __('Company details') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="calculator" :href="route('billing.tax-settings.edit')" :current="request()->routeIs('billing.tax-settings.*')" wire:navigate>
+                        {{ __('Tax settings') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="clock" :href="route('billing.automation.edit')" :current="request()->routeIs('billing.automation.*')" wire:navigate>
+                        {{ __('Automation') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="envelope" :href="route('billing.email-templates.index')" :current="request()->routeIs('billing.email-templates.*')" wire:navigate>
+                        {{ __('Email templates') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+
             </flux:sidebar.nav>
 
             <flux:spacer />
-
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
-                </flux:sidebar.item>
-
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
