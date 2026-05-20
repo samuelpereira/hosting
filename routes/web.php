@@ -1,9 +1,10 @@
 <?php
 
+use App\Http\Controllers\WelcomeController;
 use App\Livewire\Dashboard;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+Route::get('/', WelcomeController::class)->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', Dashboard::class)->name('dashboard');
