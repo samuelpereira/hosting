@@ -8,9 +8,7 @@
 composer install
 ````
 
-### 2. Edit and update .env
-
-### 3. Run composer script
+### 2. Run composer script
 
 ````
 composer run-script setup
@@ -30,7 +28,7 @@ User=www-data
 Group=www-data
 Restart=always
 WorkingDirectory=/var/www/billing
-ExecStart=/usr/bin/php8.3 artisan queue:listen --name=billing --memory=128 --timeout=3600 --tries=5
+ExecStart=/usr/bin/php artisan queue:listen --name=billing --memory=128 --timeout=3600 --tries=5
 
 [Install]
 WantedBy=multi-user.target
@@ -50,15 +48,19 @@ service billing-queue start
 
 ### Run migrations
 ````
-php8.3 artisan migrate:fresh --seed
+php artisan migrate
+````
+
+````
+php artisan db:seed
 ````
 
 ### Force Run Automation
 ````
-php8.3 artisan billing:run-automation --force
+php artisan billing:run-automation --force
 ````
 
 ### Crontab
 ````
-0 * * * * php8.3 artisan schedule:run
+0 * * * * php artisan schedule:run
 ````
