@@ -29,6 +29,10 @@ class Manage extends Component
 
     public bool $is_active = true;
 
+    public bool $is_public = false;
+
+    public int $sort_order = 0;
+
     /** @var array<int, array{id: ?int, billing_kind: string, interval_unit: string, interval_count: int, currency: string, amount_input: string, is_active: bool}> */
     public array $priceRows = [];
 
@@ -39,14 +43,14 @@ class Manage extends Component
             $data = $product->only([
                 'name', 'slug', 'description',
                 'default_allocated_ram_gb', 'default_allocated_disk_gb',
-                'is_active',
+                'is_active', 'is_public', 'sort_order',
             ]);
             $this->fill(collect($data)->map(function ($value, string $key) {
-                if ($key === 'is_active') {
+                if (in_array($key, ['is_active', 'is_public'], true)) {
                     return (bool) $value;
                 }
-                if (in_array($key, ['default_allocated_ram_gb', 'default_allocated_disk_gb'], true)) {
-                    return $value === null ? null : (int) $value;
+                if (in_array($key, ['default_allocated_ram_gb', 'default_allocated_disk_gb', 'sort_order'], true)) {
+                    return $value === null ? 0 : (int) $value;
                 }
 
                 return $value ?? '';
@@ -61,7 +65,10 @@ class Manage extends Component
                 'amount_input' => number_format($p->amount_minor / 100, 2, '.', ''),
                 'is_active' => $p->is_active,
             ])->all();
+        } else {
+            $this->sort_order = Product::nextSortOrder();
         }
+
         if ($this->priceRows === []) {
             $this->addPriceRow();
         }
@@ -105,6 +112,8 @@ class Manage extends Component
             'default_allocated_ram_gb' => ['nullable', 'integer', 'min:0'],
             'default_allocated_disk_gb' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['boolean'],
+            'is_public' => ['boolean'],
+            'sort_order' => ['required', 'integer', 'min:0'],
             'priceRows' => ['required', 'array', 'min:1'],
             'priceRows.*.billing_kind' => ['required', Rule::enum(ProductPriceBillingKind::class)],
             'priceRows.*.interval_unit' => ['required', Rule::enum(IntervalUnit::class)],
@@ -122,6 +131,8 @@ class Manage extends Component
             'default_allocated_ram_gb' => $this->nullableNonNegativeInt($this->default_allocated_ram_gb),
             'default_allocated_disk_gb' => $this->nullableNonNegativeInt($this->default_allocated_disk_gb),
             'is_active' => $this->is_active,
+            'is_public' => $this->is_public,
+            'sort_order' => $this->sort_order,
         ];
         if (! $this->product) {
             $product = Product::query()->create($payload);

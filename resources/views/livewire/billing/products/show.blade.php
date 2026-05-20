@@ -7,6 +7,9 @@
                 <flux:badge size="sm" :color="$product->is_active ? 'green' : 'amber'" class="ms-2">
                     {{ $product->is_active ? __('Active') : __('Inactive') }}
                 </flux:badge>
+                @if ($product->is_public)
+                    <flux:badge size="sm" color="sky" class="ms-1">{{ __('Public') }}</flux:badge>
+                @endif
                 <flux:badge size="sm" class="ms-1 capitalize">{{ \Illuminate\Support\Str::headline($product->type->value) }}</flux:badge>
             </flux:subheading>
         </div>
@@ -43,6 +46,9 @@
 
     <flux:card class="mt-4 p-6 space-y-4">
         <flux:heading size="sm">{{ __('Details') }}</flux:heading>
+        <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">
+            {{ __('Sort') }}: <span class="font-medium text-zinc-800 dark:text-white">{{ $product->sort_order }}</span>
+        </flux:text>
         @if ($product->description)
             <div>
                 <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Description') }}</flux:text>
@@ -157,7 +163,9 @@
             <flux:table.rows>
                 @forelse ($services as $service)
                     <flux:table.row wire:key="svc-{{ $service->id }}">
-                        <flux:table.cell class="tabular-nums text-zinc-600 dark:text-zinc-400">{{ $service->id }}</flux:table.cell>
+                        <flux:table.cell>
+                            <flux:link :href="route('billing.services.edit', $service->id)" wire:navigate>{{ $service->id }}</flux:link>
+                        </flux:table.cell>
                         <flux:table.cell>
                             <flux:link :href="route('billing.clients.show', $service->client_id)" wire:navigate>{{ $service->client?->firstAndLastName() }}</flux:link>
                         </flux:table.cell>

@@ -488,7 +488,7 @@ class BillingSeeder extends Seeder
 
     private function seedProducts(): void
     {
-        foreach (self::PRODUCTS as $row) {
+        foreach (self::PRODUCTS as $index => $row) {
             $product = Product::query()->updateOrCreate(
                 ['slug' => $row['slug']],
                 [
@@ -496,6 +496,7 @@ class BillingSeeder extends Seeder
                     'name' => $row['name'],
                     'description' => $row['description'],
                     'is_active' => true,
+                    'sort_order' => ($index + 1) * 10,
                     'default_allocated_disk_gb' => $row['disk_gb'],
                     'default_allocated_ram_gb' => $row['ram_gb'],
                 ],

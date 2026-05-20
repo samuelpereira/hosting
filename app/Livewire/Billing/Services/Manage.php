@@ -778,7 +778,7 @@ class Manage extends Component
                 ? Client::query()->orderBy('name')->get(['id', 'name'])
                 : collect(),
             'moveClientResults' => $moveClientResults,
-            'products' => Product::query()->where('is_active', true)->orderBy('name')->get([
+            'products' => Product::query()->where('is_active', true)->orderedForDisplay()->get([
                 'id', 'name', 'default_allocated_ram_gb', 'default_allocated_disk_gb',
             ]),
             'servers' => Server::query()->orderBy('name')->get(['id', 'name']),

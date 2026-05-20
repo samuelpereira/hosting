@@ -17,7 +17,7 @@ class Index extends Component
     public array $statuses = ['active'];
 
     #[Url(as: 'sort')]
-    public string $sortBy = 'name';
+    public string $sortBy = 'sort_order';
 
     #[Url(as: 'dir')]
     public string $sortDir = 'asc';
@@ -54,7 +54,7 @@ class Index extends Component
 
     public function sort(string $column): void
     {
-        if (! in_array($column, ['id', 'name'], true)) {
+        if (! in_array($column, ['id', 'name', 'sort_order'], true)) {
             return;
         }
 
@@ -62,7 +62,7 @@ class Index extends Component
             $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
         } else {
             $this->sortBy = $column;
-            $this->sortDir = $column === 'name' ? 'asc' : 'desc';
+            $this->sortDir = in_array($column, ['name', 'sort_order'], true) ? 'asc' : 'desc';
         }
 
         $this->resetPage();
@@ -71,8 +71,8 @@ class Index extends Component
     public function render()
     {
         $needle = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $this->q).'%';
-        $sortBy = in_array($this->sortBy, ['id', 'name'], true) ? $this->sortBy : 'id';
-        $dir = in_array($this->sortDir, ['asc', 'desc'], true) ? $this->sortDir : 'desc';
+        $sortBy = in_array($this->sortBy, ['id', 'name', 'sort_order'], true) ? $this->sortBy : 'sort_order';
+        $dir = in_array($this->sortDir, ['asc', 'desc'], true) ? $this->sortDir : 'asc';
 
         $products = Product::query()
             ->when($this->q !== '', fn ($q) => $q->where('name', 'like', $needle)->orWhere('slug', 'like', $needle))
@@ -87,7 +87,8 @@ class Index extends Component
                 });
             })
             ->when($sortBy === 'id', fn ($query) => $query->orderBy('products.id', $dir))
-            ->when($sortBy === 'name', fn ($query) => $query->orderBy('name', $dir)->orderBy('id', 'asc'))
+            ->when($sortBy === 'name', fn ($query) => $query->orderBy('name', $dir)->orderBy('sort_order', 'asc'))
+            ->when($sortBy === 'sort_order', fn ($query) => $query->orderBy('sort_order', $dir)->orderBy('name', 'asc'))
             ->paginate(15);
 
         return view('livewire.billing.products.index', compact('products'))->title(__('Products'));

@@ -48,6 +48,14 @@
     <flux:card class="mt-4 overflow-hidden p-0">
         <flux:table container:class="px-4 sm:px-6 py-3">
             <flux:table.columns>
+                <flux:table.column align="end">
+                    <button type="button" wire:click="sort('sort_order')" class="inline-flex items-center gap-1 font-medium hover:text-zinc-900 dark:hover:text-white">
+                        {{ __('Sort') }}
+                        @if ($sortBy === 'sort_order')
+                            <flux:icon :name="$sortDir === 'asc' ? 'chevron-up' : 'chevron-down'" variant="micro" />
+                        @endif
+                    </button>
+                </flux:table.column>
                 <flux:table.column>
                     <button type="button" wire:click="sort('id')" class="inline-flex items-center gap-1 font-medium hover:text-zinc-900 dark:hover:text-white">
                         {{ __('ID') }}
@@ -72,6 +80,7 @@
             <flux:table.rows>
                 @forelse ($products as $product)
                     <flux:table.row :key="$product->id">
+                        <flux:table.cell align="end" class="tabular-nums font-medium text-zinc-700 dark:text-zinc-300">{{ $product->sort_order }}</flux:table.cell>
                         <flux:table.cell class="tabular-nums text-zinc-600 dark:text-zinc-400">{{ $product->id }}</flux:table.cell>
                         <flux:table.cell variant="strong">
                             <flux:link :href="route('billing.products.show', $product)" wire:navigate>{{ $product->name }}</flux:link>
@@ -82,17 +91,20 @@
                             <div>{{ \App\Models\Server::formatRamGb($product->capacityRamGb()) }}</div>
                             <div class="text-zinc-500">{{ \App\Models\Server::formatDiskGb($product->capacityDiskGb()) }}</div>
                         </flux:table.cell>
-                        <flux:table.cell align="center">
+                        <flux:table.cell align="center" class="whitespace-normal">
                             @if ($product->is_active)
                                 <flux:badge size="sm" color="green">{{ __('Active') }}</flux:badge>
                             @else
                                 <flux:badge size="sm" color="amber">{{ __('Inactive') }}</flux:badge>
                             @endif
+                            @if ($product->is_public)
+                                <flux:badge size="sm" color="sky" class="mt-1">{{ __('Public') }}</flux:badge>
+                            @endif
                         </flux:table.cell>
                     </flux:table.row>
                 @empty
                     <flux:table.row>
-                        <flux:table.cell colspan="6">{{ __('No products found.') }}</flux:table.cell>
+                        <flux:table.cell colspan="7">{{ __('No products found.') }}</flux:table.cell>
                     </flux:table.row>
                 @endforelse
             </flux:table.rows>

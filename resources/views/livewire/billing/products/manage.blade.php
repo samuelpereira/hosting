@@ -9,14 +9,22 @@
             @endforeach
         </flux:select>
         <flux:input wire:model="name" :label="__('Name')" required />
-        <flux:input wire:model="slug" :label="__('Slug')" required />
+        <div class="grid gap-4 sm:grid-cols-2">
+            <flux:input wire:model="slug" :label="__('Slug')" required />
+            <flux:input wire:model="sort_order" type="number" min="0" :label="__('Sort')" />
+        </div>
+        <flux:text class="text-sm text-zinc-500">{{ __('Lower numbers appear first in the product list and on the public landing page.') }}</flux:text>
         <flux:textarea wire:model="description" :label="__('Description')" rows="3" />
         <div class="grid gap-4 sm:grid-cols-2">
             <flux:input wire:model="default_allocated_ram_gb" type="number" min="0" :label="__('Default RAM allocation (GB)')" />
             <flux:input wire:model="default_allocated_disk_gb" type="number" min="0" :label="__('Default disk allocation (GB)')" />
         </div>
         <flux:text class="text-sm text-zinc-500">{{ __('Used to pre-fill new services for this product; you can still override on each service.') }}</flux:text>
-        <flux:checkbox wire:model="is_active" :label="__('Active')" />
+        <div class="flex flex-wrap gap-6">
+            <flux:checkbox wire:model="is_active" :label="__('Active')" />
+            <flux:checkbox wire:model="is_public" :label="__('Public')" />
+        </div>
+        <flux:text class="text-sm text-zinc-500">{{ __('Public products appear on the website landing page.') }}</flux:text>
 
         <div class="space-y-4">
             <div class="flex items-center justify-between">
