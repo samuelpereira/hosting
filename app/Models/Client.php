@@ -21,6 +21,14 @@ class Client extends Model
             'vat_exception' => 'boolean',
             'irs_exception' => 'boolean',
             'registered_at' => 'datetime',
+            'company_name' => 'encrypted',
+            'address_line' => 'encrypted',
+            'postal_code' => 'encrypted',
+            'city' => 'encrypted',
+            'country' => 'encrypted',
+            'phone' => 'encrypted',
+            'vat_number' => 'encrypted',
+            'notes' => 'encrypted',
         ];
     }
 

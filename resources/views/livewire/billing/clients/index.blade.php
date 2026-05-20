@@ -12,7 +12,7 @@
     <flux:card class="mt-6 p-4">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-12">
             <div class="sm:col-span-9">
-                <flux:input wire:model.live.debounce.300ms="q" :label="__('Search')" placeholder="{{ __('Name, company, email') }}" />
+                <flux:input wire:model.live.debounce.300ms="q" :label="__('Search')" placeholder="{{ __('Name, email') }}" />
             </div>
             <div class="space-y-2 sm:col-span-3">
                 <span class="text-sm font-medium text-zinc-800 dark:text-zinc-200">{{ __('Status') }}</span>

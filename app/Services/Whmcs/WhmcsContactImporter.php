@@ -111,25 +111,30 @@ class WhmcsContactImporter
                     continue;
                 }
 
+                $emailNorm = strtolower($payload['email']);
+
                 if ($dryRun) {
                     $exists = Contact::query()
                         ->where('client_id', $clientId)
-                        ->where('email', $payload['email'])
-                        ->exists();
+                        ->get()
+                        ->contains(fn (Contact $c) => strtolower((string) $c->email) === $emailNorm);
                     $exists ? $stats['updated']++ : $stats['created']++;
 
                     continue;
                 }
 
-                $contact = Contact::query()->updateOrCreate(
-                    ['client_id' => $clientId, 'email' => $payload['email']],
-                    $payload,
-                );
+                $existing = Contact::query()
+                    ->where('client_id', $clientId)
+                    ->get()
+                    ->first(fn (Contact $c) => strtolower((string) $c->email) === $emailNorm);
 
-                if ($contact->wasRecentlyCreated) {
-                    $stats['created']++;
-                } else {
+                if ($existing !== null) {
+                    $existing->fill($payload);
+                    $existing->save();
                     $stats['updated']++;
+                } else {
+                    Contact::query()->create($payload);
+                    $stats['created']++;
                 }
             }
         }, $this->columns['id']);

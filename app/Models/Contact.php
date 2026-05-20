@@ -12,7 +12,13 @@ class Contact extends Model
 
     protected function casts(): array
     {
-        return ['role' => ContactRole::class, 'is_primary' => 'boolean'];
+        return [
+            'role' => ContactRole::class,
+            'is_primary' => 'boolean',
+            'name' => 'encrypted',
+            'email' => 'encrypted',
+            'phone' => 'encrypted',
+        ];
     }
 
     public function client(): BelongsTo

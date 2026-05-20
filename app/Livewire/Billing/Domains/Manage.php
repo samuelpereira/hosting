@@ -306,8 +306,7 @@ class Manage extends Component
                     ->whereKeyNot($this->domain->client_id)
                     ->where(function ($q) use ($needle) {
                         $q->where('name', 'like', $needle)
-                            ->orWhere('email', 'like', $needle)
-                            ->orWhere('company_name', 'like', $needle);
+                            ->orWhere('email', 'like', $needle);
                     })
                     ->orderBy('name')
                     ->limit(10)

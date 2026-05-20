@@ -79,7 +79,6 @@ class Index extends Component
             ->when($this->q !== '', function ($query) use ($needle) {
                 $query->where(function ($q) use ($needle) {
                     $q->where('name', 'like', $needle)
-                        ->orWhere('company_name', 'like', $needle)
                         ->orWhere('email', 'like', $needle)
                         ->when(ctype_digit(trim($this->q)), fn ($q) => $q->orWhere('id', (int) trim($this->q)));
                 });
