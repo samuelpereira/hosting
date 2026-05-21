@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\OrderStatus;
 use App\Enums\TransactionStatus;
+use App\Services\Billing\OrderLinkedAssetRenewal;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -98,10 +99,22 @@ class Order extends Model
             return;
         }
 
+        $markingPaid = $this->status !== OrderStatus::Paid;
+
         $this->update([
             'status' => OrderStatus::Paid,
             'paid_at' => $transaction->paid_at,
         ]);
+
+        if ($markingPaid) {
+            $this->extendLinkedServicesAndDomains();
+        }
+    }
+
+    /** Extend due dates on services and domains linked to this order's line items. */
+    public function extendLinkedServicesAndDomains(): void
+    {
+        (new OrderLinkedAssetRenewal($this))->apply();
     }
 
     public function syncPaymentStatusFromTransactions(): void
@@ -110,11 +123,16 @@ class Order extends Model
         $paidMinor = (int) $completedQuery->sum('amount_minor');
 
         if ($paidMinor >= $this->total_minor) {
+            $markingPaid = $this->status !== OrderStatus::Paid;
             $latest = (clone $completedQuery)->orderByDesc('paid_at')->orderByDesc('id')->first();
             $this->update([
                 'status' => OrderStatus::Paid,
                 'paid_at' => $latest?->paid_at,
             ]);
+
+            if ($markingPaid) {
+                $this->extendLinkedServicesAndDomains();
+            }
 
             return;
         }
