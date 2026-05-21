@@ -83,8 +83,11 @@ class Index extends Component
         $services = Service::query()
             ->with(['client', 'product', 'server'])
             ->when($this->q !== '', function ($query) use ($needle) {
-                $query->whereHas('client', fn ($q) => $q->where('name', 'like', $needle)->orWhere('email', 'like', $needle))
-                    ->orWhereHas('product', fn ($q) => $q->where('name', 'like', $needle));
+                $query->where(function ($query) use ($needle) {
+                    $query->whereHas('client', fn ($q) => $q->where('name', 'like', $needle)->orWhere('email', 'like', $needle))
+                        ->orWhereHas('product', fn ($q) => $q->where('name', 'like', $needle))
+                        ->orWhereHas('server', fn ($q) => $q->where('name', 'like', $needle)->orWhere('hostname', 'like', $needle));
+                });
             })
             ->when($this->statuses !== [], fn ($query) => $query->whereIn('status', $this->statuses))
             ->when($sortBy === 'id', fn ($query) => $query->orderBy('services.id', $dir))

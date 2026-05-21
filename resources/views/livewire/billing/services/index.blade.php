@@ -10,7 +10,7 @@
     <flux:card class="mt-6 p-4">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-12">
             <div class="sm:col-span-9">
-                <flux:input wire:model.live.debounce.300ms="q" :label="__('Search')" placeholder="{{ __('Product, client') }}"/>
+                <flux:input wire:model.live.debounce.300ms="q" :label="__('Search')" placeholder="{{ __('Product, client, server') }}"/>
             </div>
             <div class="space-y-2 sm:col-span-3">
                 <span class="text-sm font-medium text-zinc-800 dark:text-zinc-200">{{ __('Status') }}</span>
@@ -59,6 +59,7 @@
                         @endif
                     </button>
                 </flux:table.column>
+                <flux:table.column>{{ __('Server') }}</flux:table.column>
                 <flux:table.column align="end">
                     <button type="button" wire:click="sort('due')" class="inline-flex items-center gap-1 font-medium hover:text-zinc-900 dark:hover:text-white">
                         {{ __('Due at') }}
@@ -94,6 +95,13 @@
                                 —
                             @endif
                         </flux:table.cell>
+                        <flux:table.cell>
+                            @if ($service->server)
+                                <flux:link :href="route('billing.servers.show', $service->server)" wire:navigate>{{ $service->server->name }}</flux:link>
+                            @else
+                                —
+                            @endif
+                        </flux:table.cell>
                         <flux:table.cell align="end">{{ $service->due_at?->format('Y-m-d') }}</flux:table.cell>
                         <flux:table.cell align="end">
                             @if ($service->recurring_amount_minor !== null)
@@ -110,7 +118,7 @@
                     </flux:table.row>
                 @empty
                     <flux:table.row>
-                        <flux:table.cell colspan="7">{{ __('No services found.') }}</flux:table.cell>
+                        <flux:table.cell colspan="8">{{ __('No services found.') }}</flux:table.cell>
                     </flux:table.row>
                 @endforelse
             </flux:table.rows>
