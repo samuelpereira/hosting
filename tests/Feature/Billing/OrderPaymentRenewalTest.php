@@ -11,10 +11,42 @@ use App\Models\Domain;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Registrar;
 use App\Models\Service;
 use App\Models\Transaction;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
+
+function orderPaymentRenewalRegistrar(): Registrar
+{
+    return Registrar::query()->create([
+        'name' => 'Renewal Test Registrar',
+        'code' => 'renewal-'.uniqid(),
+        'is_active' => true,
+    ]);
+}
+
+function createOrderPaymentRenewalDomain(
+    Client $client,
+    Registrar $registrar,
+    string $fqdn,
+    string $expiresAt,
+    string $dueAt,
+    int $intervalCount = 1,
+): Domain {
+    return Domain::query()->create([
+        'client_id' => $client->id,
+        'registrar_id' => $registrar->id,
+        'fqdn' => $fqdn,
+        'status' => \App\Enums\DomainStatus::Active,
+        'currency' => 'EUR',
+        'interval_unit' => IntervalUnit::Year,
+        'interval_count' => $intervalCount,
+        'registered_at' => $dueAt,
+        'expires_at' => $expiresAt,
+        'due_at' => $dueAt,
+    ]);
+}
 
 test('completed payment extends service and linked domain billing dates', function () {
     Carbon::setTestNow('2026-05-20');
@@ -26,16 +58,13 @@ test('completed payment extends service and linked domain billing dates', functi
         'is_active' => true,
     ]);
 
-    $domain = Domain::query()->create([
-        'client_id' => $client->id,
-        'fqdn' => 'example.pt',
-        'status' => \App\Enums\DomainStatus::Active,
-        'currency' => 'EUR',
-        'interval_unit' => IntervalUnit::Year,
-        'interval_count' => 1,
-        'expires_at' => '2026-06-01',
-        'due_at' => '2026-06-01',
-    ]);
+    $domain = createOrderPaymentRenewalDomain(
+        $client,
+        orderPaymentRenewalRegistrar(),
+        'example.pt',
+        '2026-06-01',
+        '2026-06-01',
+    );
 
     $service = Service::query()->create([
         'client_id' => $client->id,
@@ -102,16 +131,14 @@ test('domain-only order line extends domain due and expires dates', function () 
         'is_active' => true,
     ]);
 
-    $domain = Domain::query()->create([
-        'client_id' => $client->id,
-        'fqdn' => 'only-domain.pt',
-        'status' => \App\Enums\DomainStatus::Active,
-        'currency' => 'EUR',
-        'interval_unit' => IntervalUnit::Year,
-        'interval_count' => 2,
-        'expires_at' => '2025-01-10',
-        'due_at' => '2025-01-10',
-    ]);
+    $domain = createOrderPaymentRenewalDomain(
+        $client,
+        orderPaymentRenewalRegistrar(),
+        'only-domain.pt',
+        '2025-01-10',
+        '2025-01-10',
+        intervalCount: 2,
+    );
 
     $order = Order::query()->create([
         'client_id' => $client->id,
