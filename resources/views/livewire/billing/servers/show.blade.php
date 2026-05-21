@@ -80,6 +80,9 @@
                     {{ \App\Models\Server::formatRamGb($server->capacityRamGb()) }}
                     · {{ \App\Models\Server::formatDiskGb($server->capacityDiskGb()) }}
                 </flux:text>
+                @if ($server->allowsOverallocation())
+                    <flux:text class="mt-1 text-sm text-amber-600 dark:text-amber-400">{{ __('Allocations over capacity are allowed on this server.') }}</flux:text>
+                @endif
             </div>
         </div>
         @if ($server->notes)
@@ -110,9 +113,11 @@
             <flux:table.rows>
                 @forelse ($services as $service)
                     <flux:table.row wire:key="svc-{{ $service->id }}">
-                        <flux:table.cell class="tabular-nums text-zinc-600 dark:text-zinc-400">{{ $service->id }}</flux:table.cell>
                         <flux:table.cell>
-                            <flux:link :href="route('billing.services.edit', $service)" wire:navigate>{{ $service->product?->name }}</flux:link>
+                            <flux:link :href="route('billing.services.edit', $service)" wire:navigate>{{ $service->id }}</flux:link>
+                        </flux:table.cell>
+                        <flux:table.cell class="text-zinc-600 dark:text-zinc-400">
+                            {{ $service->product?->name }}
                         </flux:table.cell>
                         <flux:table.cell>
                             <flux:link :href="route('billing.clients.show', $service->client_id)" wire:navigate>{{ $service->client?->firstAndLastName() }}</flux:link>

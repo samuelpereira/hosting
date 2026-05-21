@@ -45,6 +45,11 @@
                 <option value="{{ $st->value }}">{{ $st->name }}</option>
             @endforeach
         </flux:select>
+        <flux:checkbox
+            wire:model="allow_overallocation"
+            :label="__('Allow service allocations over server capacity')"
+        />
+        <flux:text class="text-sm text-zinc-500">{{ __('When enabled, RAM and disk limits from specs are not enforced when saving services on this server.') }}</flux:text>
         <div class="grid gap-4 sm:grid-cols-2">
             <flux:input wire:model="cost_amount_input" :label="__('Monthly cost (major)')" />
             <flux:input wire:model="cost_currency" :label="__('Cost currency')" maxlength="3" />

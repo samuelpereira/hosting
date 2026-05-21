@@ -11,12 +11,27 @@ use Illuminate\Support\Collection;
 class Server extends Model
 {
     protected $fillable = [
-        'name', 'hostname', 'panel_url', 'status', 'cost_amount_minor', 'cost_currency', 'specs', 'notes',
+        'name', 'hostname', 'panel_url', 'status', 'allow_overallocation',
+        'cost_amount_minor', 'cost_currency', 'specs', 'notes',
     ];
 
     protected function casts(): array
     {
-        return ['status' => ServerStatus::class, 'specs' => 'array'];
+        return [
+            'status' => ServerStatus::class,
+            'allow_overallocation' => 'boolean',
+            'specs' => 'array',
+        ];
+    }
+
+    public function allowsOverallocation(): bool
+    {
+        return (bool) $this->allow_overallocation;
+    }
+
+    public function enforcesAllocationCapacity(): bool
+    {
+        return ! $this->allowsOverallocation();
     }
 
     public function services(): HasMany

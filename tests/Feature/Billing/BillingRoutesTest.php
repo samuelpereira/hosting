@@ -181,6 +181,55 @@ test('service save rejects ram over server capacity', function () {
         ->assertHasErrors(['allocated_ram_gb']);
 });
 
+test('service save allows over server capacity when server allows overallocation', function () {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $this->actingAs($user);
+
+    $client = Client::query()->create([
+        'name' => 'Overalloc Client',
+        'email' => 'overalloc@test.example',
+        'currency' => 'USD',
+        'is_active' => true,
+    ]);
+    $product = Product::query()->create([
+        'type' => ProductType::Vps,
+        'name' => 'VPS Overalloc',
+        'slug' => 'vps-overalloc',
+        'is_active' => true,
+    ]);
+    $server = Server::query()->create([
+        'name' => 'Overalloc S1',
+        'hostname' => 'overalloc-s1.test.internal',
+        'status' => ServerStatus::Active,
+        'allow_overallocation' => true,
+        'cost_amount_minor' => 0,
+        'cost_currency' => 'USD',
+        'specs' => ['ram_gb' => 2, 'disk_gb' => 50],
+    ]);
+    Service::query()->create([
+        'client_id' => $client->id,
+        'product_id' => $product->id,
+        'server_id' => $server->id,
+        'status' => ServiceStatus::Active,
+        'currency' => 'USD',
+        'allocated_ram_gb' => 2,
+        'allocated_disk_gb' => 40,
+    ]);
+
+    Livewire::test(ServicesManage::class)
+        ->set('client_id', $client->id)
+        ->set('product_id', $product->id)
+        ->set('server_id', $server->id)
+        ->set('status', ServiceStatus::Active->value)
+        ->set('allocated_ram_gb', 8)
+        ->set('allocated_disk_gb', 30)
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertRedirect();
+
+    expect(Service::query()->where('client_id', $client->id)->where('allocated_ram_gb', 8)->where('allocated_disk_gb', 30)->exists())->toBeTrue();
+});
+
 test('new service prefills amounts from product prices', function () {
     $user = User::factory()->create(['email_verified_at' => now()]);
     $this->actingAs($user);

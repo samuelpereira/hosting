@@ -415,31 +415,36 @@ class Manage extends Component
             }
         }
 
-        if ($this->server_id && $this->allocated_ram_gb !== null) {
+        if ($this->server_id) {
             $server = Server::query()->findOrFail($this->server_id);
-            $cap = $server->capacityRamGb();
-            if ($cap !== null) {
-                $used = (int) $server->allocatingServices()
-                    ->when($this->service, fn ($q) => $q->where('id', '!=', $this->service->id))
-                    ->sum('allocated_ram_gb');
-                if ($used + $this->allocated_ram_gb > $cap) {
-                    $this->addError('allocated_ram_gb', __('RAM allocation exceeds server capacity.'));
 
-                    return;
+            if ($server->enforcesAllocationCapacity()) {
+                if ($this->allocated_ram_gb !== null) {
+                    $cap = $server->capacityRamGb();
+                    if ($cap !== null) {
+                        $used = (int) $server->allocatingServices()
+                            ->when($this->service, fn ($q) => $q->where('id', '!=', $this->service->id))
+                            ->sum('allocated_ram_gb');
+                        if ($used + $this->allocated_ram_gb > $cap) {
+                            $this->addError('allocated_ram_gb', __('RAM allocation exceeds server capacity.'));
+
+                            return;
+                        }
+                    }
                 }
-            }
-        }
-        if ($this->server_id && $this->allocated_disk_gb !== null) {
-            $server = Server::query()->findOrFail($this->server_id);
-            $cap = $server->capacityDiskGb();
-            if ($cap !== null) {
-                $used = (int) $server->allocatingServices()
-                    ->when($this->service, fn ($q) => $q->where('id', '!=', $this->service->id))
-                    ->sum('allocated_disk_gb');
-                if ($used + $this->allocated_disk_gb > $cap) {
-                    $this->addError('allocated_disk_gb', __('Disk allocation exceeds server capacity.'));
 
-                    return;
+                if ($this->allocated_disk_gb !== null) {
+                    $cap = $server->capacityDiskGb();
+                    if ($cap !== null) {
+                        $used = (int) $server->allocatingServices()
+                            ->when($this->service, fn ($q) => $q->where('id', '!=', $this->service->id))
+                            ->sum('allocated_disk_gb');
+                        if ($used + $this->allocated_disk_gb > $cap) {
+                            $this->addError('allocated_disk_gb', __('Disk allocation exceeds server capacity.'));
+
+                            return;
+                        }
+                    }
                 }
             }
         }

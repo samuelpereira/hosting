@@ -20,6 +20,8 @@ class Manage extends Component
 
     public string $status = 'active';
 
+    public bool $allow_overallocation = false;
+
     public string $cost_amount_input = '0.00';
 
     public string $cost_currency = 'USD';
@@ -39,6 +41,7 @@ class Manage extends Component
             $data = $server->only(['name', 'hostname', 'panel_url', 'notes']);
             $this->fill(collect($data)->map(fn ($value) => $value ?? '')->all());
             $this->status = $server->status->value;
+            $this->allow_overallocation = $server->allowsOverallocation();
             $this->cost_currency = $server->cost_currency;
             $this->cost_amount_input = number_format($server->cost_amount_minor / 100, 2, '.', '');
             $specs = $server->specs ?? [];
@@ -63,6 +66,7 @@ class Manage extends Component
             'hostname' => ['required', 'string', 'max:255'],
             'panel_url' => ['nullable', 'string', 'url', 'max:255'],
             'status' => ['required', Rule::enum(ServerStatus::class)],
+            'allow_overallocation' => ['boolean'],
             'cost_amount_input' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
             'cost_currency' => ['required', 'string', 'size:3'],
             'ram_gb' => ['nullable', 'integer', 'min:0'],
@@ -88,6 +92,7 @@ class Manage extends Component
             'hostname' => $this->hostname,
             'panel_url' => trim($this->panel_url) !== '' ? trim($this->panel_url) : null,
             'status' => ServerStatus::from($this->status),
+            'allow_overallocation' => $this->allow_overallocation,
             'cost_amount_minor' => (int) round((float) $this->cost_amount_input * 100),
             'cost_currency' => strtoupper($this->cost_currency),
             'specs' => $specs !== [] ? $specs : null,
