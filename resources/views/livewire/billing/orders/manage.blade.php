@@ -10,11 +10,11 @@
                     <flux:link :href="route('billing.clients.show', $order->client_id)" wire:navigate class="font-medium">
                         {{ $order->client?->name }}
                     </flux:link>
-                    @if ($order->client?->email)
-                        <flux:text class="text-sm text-zinc-500">{{ $order->client->email }}</flux:text>
-                    @endif
                     @if ($order->client?->company_name)
                         <flux:text class="text-sm text-zinc-500">{{ $order->client->company_name }}</flux:text>
+                    @endif
+                    @if ($order->client?->vat_number)
+                        <flux:text><span class="font-medium text-zinc-800 dark:text-white">{{ __('VAT') }}:</span> {{ $order->client->vat_number }}</flux:text>
                     @endif
                 </flux:card>
             </div>
