@@ -198,7 +198,7 @@
 
         <flux:card class="mt-4 p-6">
             <flux:heading size="sm" class="mb-4">{{ __('Add contact') }}</flux:heading>
-            <div class="grid gap-4 sm:grid-cols-2">
+            <div class="grid gap-4 sm:grid-cols-2 py-3">
                 <flux:input wire:model="contact_name" :label="__('Name')" />
                 <flux:input wire:model="contact_email" :label="__('Email')" type="email" />
                 <flux:input wire:model="contact_phone" :label="__('Phone')" />

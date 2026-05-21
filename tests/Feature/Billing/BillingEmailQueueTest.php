@@ -2,8 +2,10 @@
 
 use App\Enums\OrderStatus;
 use App\Jobs\SendClientBillingEmailJob;
+use App\Enums\ContactRole;
 use App\Models\Client;
 use App\Models\ClientEmailLog;
+use App\Models\Contact;
 use App\Models\EmailTemplate;
 use App\Models\Order;
 use App\Services\Billing\BillingEmailSender;
@@ -37,6 +39,40 @@ test('billing emails are dispatched to the queue', function () {
     });
 
     expect(ClientEmailLog::query()->count())->toBe(0);
+});
+
+test('billing email includes client contacts in cc', function () {
+    Queue::fake();
+    $this->seed(EmailTemplateSeeder::class);
+
+    $client = Client::query()->create([
+        'name' => 'Queue Client',
+        'email' => 'client@test.example',
+        'currency' => 'EUR',
+        'is_active' => true,
+    ]);
+
+    Contact::query()->create([
+        'client_id' => $client->id,
+        'name' => 'Billing Contact',
+        'email' => 'billing-contact@test.example',
+        'role' => ContactRole::Billing,
+        'is_primary' => false,
+    ]);
+
+    $template = EmailTemplate::query()->where('slug', 'order_created')->firstOrFail();
+
+    app(BillingEmailSender::class)->sendToClient(
+        $template,
+        $client->email,
+        ['client_name' => $client->name, 'order_number' => 'ORD-Q-2'],
+        $client->id,
+    );
+
+    Queue::assertPushed(SendClientBillingEmailJob::class, function (SendClientBillingEmailJob $job) {
+        return $job->to === 'client@test.example'
+            && str_contains((string) $job->cc, 'billing-contact@test.example');
+    });
 });
 
 test('queued billing email job retries on failure', function () {

@@ -6,8 +6,10 @@ use App\Enums\ServiceStatus;
 use App\Enums\TransactionStatus;
 use App\Livewire\Billing\Clients\Show as ClientsShow;
 use App\Livewire\Billing\Orders\Manage as OrdersManage;
+use App\Enums\ContactRole;
 use App\Models\Client;
 use App\Models\ClientEmailLog;
+use App\Models\Contact;
 use App\Models\EmailTemplate;
 use App\Models\Order;
 use App\Models\Product;
@@ -59,6 +61,51 @@ test('sending order email creates a client email log', function () {
         ->and($log->email_template_slug)->toBe('order_created')
         ->and($log->order_id)->toBe($order->id)
         ->and($log->message)->not->toBe('');
+});
+
+test('sending order email cc includes contact addresses', function () {
+    Mail::fake();
+    $this->seed(EmailTemplateSeeder::class);
+
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $this->actingAs($user);
+
+    $client = Client::query()->create([
+        'name' => 'CC Client',
+        'email' => 'cc-client@test.example',
+        'currency' => 'EUR',
+        'is_active' => true,
+    ]);
+
+    Contact::query()->create([
+        'client_id' => $client->id,
+        'name' => 'Finance',
+        'email' => 'finance@test.example',
+        'role' => ContactRole::Billing,
+        'is_primary' => true,
+    ]);
+
+    $order = Order::query()->create([
+        'client_id' => $client->id,
+        'number' => 'ORD-CC-1',
+        'status' => OrderStatus::Unpaid,
+        'currency' => 'EUR',
+        'subtotal_minor' => 10_00,
+        'tax_minor' => 0,
+        'irs_minor' => 0,
+        'total_minor' => 10_00,
+        'issued_at' => now(),
+    ]);
+
+    Livewire::test(OrdersManage::class, ['order' => $order])
+        ->set('email_template_slug', 'order_created')
+        ->call('sendEmail')
+        ->assertHasNoErrors();
+
+    Mail::assertSent(\App\Mail\BillingTemplateMail::class, function (\App\Mail\BillingTemplateMail $mail) {
+        return $mail->hasTo('cc-client@test.example')
+            && $mail->hasCc('finance@test.example');
+    });
 });
 
 test('order paid email log stores attachment copy', function () {

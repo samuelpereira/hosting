@@ -204,8 +204,8 @@ class BillingAutomationRunner
         }
 
         $order->loadMissing('client');
-        $email = $order->client?->email;
-        if ($email === null || $email === '') {
+        $recipients = $order->client?->billingEmailRecipients() ?? [];
+        if ($recipients === []) {
             return;
         }
 
@@ -220,7 +220,7 @@ class BillingAutomationRunner
 
         $this->emailSender->sendToClient(
             $template,
-            $email,
+            $recipients[0],
             $order->emailVariables(),
             $order->client_id,
             orderId: $order->id,
@@ -239,8 +239,8 @@ class BillingAutomationRunner
         }
 
         $order->loadMissing('client');
-        $email = $order->client?->email;
-        if ($email === null || $email === '') {
+        $recipients = $order->client?->billingEmailRecipients() ?? [];
+        if ($recipients === []) {
             return false;
         }
 
@@ -255,7 +255,7 @@ class BillingAutomationRunner
 
         $this->emailSender->sendToClient(
             $template,
-            $email,
+            $recipients[0],
             $order->emailVariables(),
             $order->client_id,
             orderId: $order->id,

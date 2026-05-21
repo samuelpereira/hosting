@@ -61,6 +61,34 @@ class Client extends Model
         return $this->hasMany(Contact::class);
     }
 
+    /**
+     * Unique billing email addresses: client first, then contacts (case-insensitive dedupe).
+     *
+     * @return list<string>
+     */
+    public function billingEmailRecipients(): array
+    {
+        $emails = [];
+
+        $clientEmail = strtolower(trim((string) ($this->email ?? '')));
+        if ($clientEmail !== '') {
+            $emails[] = $clientEmail;
+        }
+
+        $contacts = $this->relationLoaded('contacts')
+            ? $this->contacts
+            : $this->contacts()->get(['email']);
+
+        foreach ($contacts as $contact) {
+            $contactEmail = strtolower(trim((string) $contact->email));
+            if ($contactEmail !== '' && ! in_array($contactEmail, $emails, true)) {
+                $emails[] = $contactEmail;
+            }
+        }
+
+        return $emails;
+    }
+
     public function services(): HasMany
     {
         return $this->hasMany(Service::class)

@@ -700,12 +700,14 @@ class Manage extends Component
 
         $service = $this->service->loadMissing(['client', 'product', 'server', 'domain']);
 
-        $clientEmail = $service->client?->email;
-        if ($clientEmail === null || $clientEmail === '') {
+        $recipients = $service->client?->billingEmailRecipients() ?? [];
+        if ($recipients === []) {
             Flux::toast(variant: 'danger', text: __('This client has no email address.'));
 
             return;
         }
+
+        $clientEmail = $recipients[0];
 
         $template = EmailTemplate::query()
             ->where('slug', $this->email_template_slug)
@@ -726,7 +728,9 @@ class Manage extends Component
             $service->id,
         );
 
-        Flux::toast(variant: 'success', text: __('Email queued to :email.', ['email' => $clientEmail]));
+        Flux::toast(variant: 'success', text: __('Email queued to :recipients.', [
+            'recipients' => implode(', ', $recipients),
+        ]));
     }
 
     /**

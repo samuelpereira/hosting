@@ -3,6 +3,7 @@
 namespace App\Services\Billing;
 
 use App\Jobs\SendClientBillingEmailJob;
+use App\Models\Client;
 use App\Models\EmailTemplate;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Storage;
@@ -87,6 +88,8 @@ class BillingEmailSender
             throw new InvalidArgumentException(__('This email template is inactive.'));
         }
 
+        $delivery = $this->resolveDeliveryAddresses($clientId, $to, $cc);
+
         $rendered = $template->render($variables);
 
         $attachments = [];
@@ -103,12 +106,75 @@ class BillingEmailSender
             emailTemplateSlug: $template->slug,
             orderId: $orderId,
             serviceId: $serviceId,
-            to: $to,
-            cc: $cc,
+            to: $delivery['to'],
+            cc: $delivery['cc'],
             bcc: $bcc,
             subject: $rendered['subject'],
             message: $rendered['body'],
             queuedAttachments: $this->prepareAttachmentsForQueue($attachments),
+        );
+    }
+
+    /**
+     * @return array{to: string, cc: string|null}
+     */
+    private function resolveDeliveryAddresses(int $clientId, string $primaryTo, ?string $cc): array
+    {
+        $client = Client::query()->with('contacts')->find($clientId);
+        $recipients = $client?->billingEmailRecipients() ?? [];
+
+        if ($recipients === []) {
+            $normalized = strtolower(trim($primaryTo));
+            if ($normalized === '') {
+                throw new InvalidArgumentException(__('No email addresses for this client.'));
+            }
+
+            $recipients = [$normalized];
+        }
+
+        $contactCc = array_slice($recipients, 1);
+        $mergedCc = $this->mergeAddressLists($contactCc, $this->parseAddressList($cc));
+
+        return [
+            'to' => $recipients[0],
+            'cc' => $mergedCc !== [] ? implode(', ', $mergedCc) : null,
+        ];
+    }
+
+    /**
+     * @param  list<string>  $lists
+     * @return list<string>
+     */
+    private function mergeAddressLists(...$lists): array
+    {
+        $merged = [];
+
+        foreach ($lists as $list) {
+            foreach ($list as $email) {
+                $normalized = strtolower(trim($email));
+                if ($normalized !== '' && ! in_array($normalized, $merged, true)) {
+                    $merged[] = $normalized;
+                }
+            }
+        }
+
+        return $merged;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function parseAddressList(?string $addresses): array
+    {
+        if ($addresses === null || trim($addresses) === '') {
+            return [];
+        }
+
+        return $this->mergeAddressLists(
+            collect(explode(',', $addresses))
+                ->map(fn (string $email) => trim($email))
+                ->filter()
+                ->all(),
         );
     }
 
