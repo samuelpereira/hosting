@@ -5,6 +5,7 @@ use App\Enums\TransactionStatus;
 use App\Livewire\Billing\Orders\Manage as OrdersManage;
 use App\Livewire\Billing\Services\Manage as ServicesManage;
 use App\Mail\BillingTemplateMail;
+use App\Models\BillingTaxSetting;
 use App\Models\Client;
 use App\Models\EmailTemplate;
 use App\Models\Order;
@@ -157,7 +158,41 @@ test('order email variables include html line descriptions', function () {
     expect($lines)
         ->toContain('Hosting - example.pt (01/06/2026 - 01/07/2026) - 30.00 EUR')
         ->toContain('Renovação de Domínio - example.pt (01/06/2026 - 01/06/2027) - 20.00 EUR')
-        ->toContain('<ul>');
+        ->toContain('<table');
+});
+
+test('order email variables include totals breakdown html', function () {
+    BillingTaxSetting::query()->delete();
+    BillingTaxSetting::query()->create(['vat_rate_percent' => 23, 'irs_rate_percent' => 25]);
+
+    $client = Client::query()->create([
+        'name' => 'Totals Client',
+        'email' => 'totals@test.example',
+        'currency' => 'EUR',
+        'is_active' => true,
+    ]);
+    $order = Order::query()->create([
+        'client_id' => $client->id,
+        'number' => 'ORD-TOTALS-1',
+        'status' => OrderStatus::Unpaid,
+        'currency' => 'EUR',
+        'subtotal_minor' => 100_00,
+        'tax_minor' => 23_00,
+        'irs_minor' => 25_00,
+        'total_minor' => 98_00,
+        'issued_at' => now(),
+        'due_at' => now()->addDays(7),
+    ]);
+
+    $totals = $order->emailVariables()['order_totals'];
+
+    expect($totals)
+        ->toContain('100.00 EUR')
+        ->toContain('23.00 EUR')
+        ->toContain('25.00 EUR')
+        ->toContain('98.00 EUR')
+        ->toContain(__('Subtotal'))
+        ->toContain(__('Total'));
 });
 
 test('order_created template renders order line items', function () {
@@ -193,8 +228,54 @@ test('order_created template renders order line items', function () {
     $rendered = $template->render($order->emailVariables());
 
     expect($rendered['body'])
-        ->toContain('<strong>Itens:</strong>')
-        ->toContain('Linha de teste - 10.00 EUR');
+        ->toContain('Linha de teste - 10.00 EUR')
+        ->toContain(__('Subtotal'))
+        ->toContain('10.00 EUR');
+});
+
+test('order_payment_reminder template renders order totals after line items', function () {
+    $this->seed(EmailTemplateSeeder::class);
+
+    $client = Client::query()->create([
+        'name' => 'Reminder Totals',
+        'email' => 'reminder-totals@test.example',
+        'currency' => 'EUR',
+        'is_active' => true,
+    ]);
+    $order = Order::query()->create([
+        'client_id' => $client->id,
+        'number' => 'ORD-REM-TOT',
+        'status' => OrderStatus::Unpaid,
+        'currency' => 'EUR',
+        'subtotal_minor' => 50_00,
+        'tax_minor' => 11_50,
+        'irs_minor' => 12_50,
+        'total_minor' => 49_00,
+        'issued_at' => now(),
+        'due_at' => now()->addDays(3),
+    ]);
+    $order->items()->create([
+        'position' => 0,
+        'type' => \App\Enums\OrderItemType::Manual,
+        'description' => 'Serviço mensal',
+        'quantity' => 1,
+        'unit_amount_minor' => 50_00,
+        'tax_amount_minor' => 0,
+    ]);
+
+    $template = EmailTemplate::query()->where('slug', 'order_payment_reminder')->firstOrFail();
+    $rendered = $template->render($order->emailVariables());
+
+    $linesPos = strpos($rendered['body'], 'Serviço mensal - 50.00 EUR');
+    $totalsPos = strpos($rendered['body'], __('Subtotal'));
+    $paymentPos = strpos($rendered['body'], 'Dados para pagamento');
+
+    expect($linesPos)->not->toBeFalse()
+        ->and($totalsPos)->not->toBeFalse()
+        ->and($paymentPos)->not->toBeFalse()
+        ->and($linesPos)->toBeLessThan($totalsPos)
+        ->and($totalsPos)->toBeLessThan($paymentPos)
+        ->and($rendered['body'])->toContain('49.00 EUR');
 });
 
 test('email template render replaces placeholders', function () {

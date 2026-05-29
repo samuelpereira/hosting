@@ -70,6 +70,7 @@ class Order extends Model
             'order_due_date' => $this->due_at?->format('Y-m-d') ?? '',
             'paid_at' => $paidAt?->format('Y-m-d') ?? '',
             'order_lines' => $this->orderLinesHtml(),
+            'order_totals' => $this->orderTotalsHtml(),
         ]);
     }
 
@@ -87,10 +88,64 @@ class Order extends Model
             $lineMinor = (int) $item->unit_amount_minor * $quantity;
             $amount = number_format($lineMinor / 100, 2, '.', '');
 
-            return '<li>'.e((string) $item->description).' - '.$amount.' '.$currency.'</li>';
+            return '<tr><td>'.e((string) $item->description).' - '.$amount.' '.$currency.'</td></tr>';
         })->implode("\n");
 
-        return "<ul>\n{$items}\n</ul>";
+        return '<table cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-top: 25px;">'.$items.'</table>';
+    }
+
+    public function orderTotalsHtml(): string
+    {
+        $currency = e((string) $this->currency);
+        $formatMinor = fn (int $minor): string => number_format($minor / 100, 2, '.', '');
+
+        $this->loadMissing('client');
+        $settings = BillingTaxSetting::instance();
+        $client = $this->client;
+        $vatRate = $client
+            ? $client->effectiveVatRatePercent()
+            : (float) $settings->vat_rate_percent;
+        $irsRate = $client
+            ? $client->effectiveIrsRatePercent()
+            : (float) $settings->irs_rate_percent;
+
+        $subtotalLabel = e(__('Subtotal'));
+        $vatLabel = e($this->formatTaxTotalsLabel('VAT', $vatRate));
+        $irsLabel = e($this->formatTaxTotalsLabel('IRS', $irsRate));
+        $totalLabel = e(__('Total'));
+
+        $subtotal = $formatMinor((int) $this->subtotal_minor);
+        $tax = $formatMinor((int) $this->tax_minor);
+        $irs = $formatMinor((int) $this->irs_minor);
+        $total = $formatMinor((int) $this->total_minor);
+
+        $labelStyle = 'padding: 1px 0; vertical-align: top;';
+        $valueStyle = 'padding: 1px 0 1px 56px; text-align: right; white-space: nowrap; vertical-align: top;';
+        $totalLabelStyle = 'padding: 1px 0; vertical-align: top;';
+        $totalValueStyle = 'padding: 1px 0 1px 56px; text-align: right; white-space: nowrap; vertical-align: top;';
+
+        return <<<HTML
+<table cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-top: 15px; margin-bottom: 25px;">
+<tr><td style="{$labelStyle}">{$subtotalLabel}</td><td style="{$valueStyle}">{$subtotal} {$currency}</td></tr>
+<tr><td style="{$labelStyle}">{$vatLabel}</td><td style="{$valueStyle}">{$tax} {$currency}</td></tr>
+<tr><td style="{$labelStyle}">{$irsLabel}</td><td style="{$valueStyle}">− {$irs} {$currency}</td></tr>
+<tr style="border-top: 1px solid #ccc;"><td style="{$totalLabelStyle}"><strong>{$totalLabel}</strong></td><td style="{$totalValueStyle}"><strong>{$total} {$currency}</strong></td></tr>
+</table>
+HTML;
+    }
+
+    private function formatTaxTotalsLabel(string $name, float $ratePercent): string
+    {
+        if ($ratePercent <= 0) {
+            return (string) __($name);
+        }
+
+        $rate = rtrim(rtrim(number_format($ratePercent, 2, '.', ''), '0'), '.');
+
+        return (string) __(':name (:rate%)', [
+            'name' => __($name),
+            'rate' => $rate,
+        ]);
     }
 
     public function applyCompletedPayment(Transaction $transaction): void

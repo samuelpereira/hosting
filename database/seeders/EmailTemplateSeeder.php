@@ -32,6 +32,7 @@ class EmailTemplateSeeder extends Seeder
                 'order_issued_date',
                 'order_due_date',
                 'order_lines',
+                'order_totals',
                 'company_name',
                 'company_phone',
                 'company_email',
@@ -47,8 +48,9 @@ class EmailTemplateSeeder extends Seeder
 <strong>Valor:</strong> {{order_total}} {{order_currency}}<br>
 <strong>Data de vencimento:</strong> {{order_due_date}}</p>
 
-<p><strong>Itens:</strong></p>
 {{order_lines}}
+
+{{order_totals}}
 
 <p>Dados para pagamento:</p>
 
@@ -104,6 +106,7 @@ HTML,
                 'order_issued_date',
                 'order_due_date',
                 'order_lines',
+                'order_totals',
                 'company_name',
                 'company_phone',
                 'company_email',
@@ -119,8 +122,9 @@ HTML,
 <strong>Valor:</strong> {{order_total}} {{order_currency}}<br>
 <strong>Data de vencimento:</strong> {{order_due_date}}</p>
 
-<p><strong>Itens:</strong></p>
 {{order_lines}}
+
+{{order_totals}}
 
 <p>Dados para pagamento:</p>
 
