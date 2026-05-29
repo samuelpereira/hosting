@@ -195,6 +195,37 @@ test('order email variables include totals breakdown html', function () {
         ->toContain(__('Total'));
 });
 
+test('order email totals omit irs row when amount is zero', function () {
+    BillingTaxSetting::query()->delete();
+    BillingTaxSetting::query()->create(['vat_rate_percent' => 23, 'irs_rate_percent' => 25]);
+
+    $client = Client::query()->create([
+        'name' => 'No IRS Client',
+        'email' => 'no-irs@test.example',
+        'currency' => 'EUR',
+        'is_active' => true,
+    ]);
+    $order = Order::query()->create([
+        'client_id' => $client->id,
+        'number' => 'ORD-NO-IRS',
+        'status' => OrderStatus::Unpaid,
+        'currency' => 'EUR',
+        'subtotal_minor' => 100_00,
+        'tax_minor' => 23_00,
+        'irs_minor' => 0,
+        'total_minor' => 123_00,
+        'issued_at' => now(),
+        'due_at' => now()->addDays(7),
+    ]);
+
+    $totals = $order->emailVariables()['order_totals'];
+
+    expect($totals)
+        ->toContain(__('Subtotal'))
+        ->toContain('123.00 EUR')
+        ->not->toContain('IRS');
+});
+
 test('order_created template renders order line items', function () {
     $this->seed(EmailTemplateSeeder::class);
 

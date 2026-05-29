@@ -110,13 +110,12 @@ class Order extends Model
             : (float) $settings->irs_rate_percent;
 
         $subtotalLabel = e(__('Subtotal'));
-        $vatLabel = e($this->formatTaxTotalsLabel('VAT', $vatRate));
+        $vatLabel = e($this->formatTaxTotalsLabel('IVA', $vatRate));
         $irsLabel = e($this->formatTaxTotalsLabel('IRS', $irsRate));
         $totalLabel = e(__('Total'));
 
         $subtotal = $formatMinor((int) $this->subtotal_minor);
         $tax = $formatMinor((int) $this->tax_minor);
-        $irs = $formatMinor((int) $this->irs_minor);
         $total = $formatMinor((int) $this->total_minor);
 
         $labelStyle = 'padding: 1px 0; vertical-align: top;';
@@ -124,12 +123,25 @@ class Order extends Model
         $totalLabelStyle = 'padding: 1px 0; vertical-align: top;';
         $totalValueStyle = 'padding: 1px 0 1px 56px; text-align: right; white-space: nowrap; vertical-align: top;';
 
-        return <<<HTML
-<table cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-top: 15px; margin-bottom: 25px;">
+        $rows = <<<HTML
 <tr><td style="{$labelStyle}">{$subtotalLabel}</td><td style="{$valueStyle}">{$subtotal} {$currency}</td></tr>
 <tr><td style="{$labelStyle}">{$vatLabel}</td><td style="{$valueStyle}">{$tax} {$currency}</td></tr>
+HTML;
+
+        if ((int) $this->irs_minor > 0) {
+            $irs = $formatMinor((int) $this->irs_minor);
+            $rows .= <<<HTML
 <tr><td style="{$labelStyle}">{$irsLabel}</td><td style="{$valueStyle}">− {$irs} {$currency}</td></tr>
+HTML;
+        }
+
+        $rows .= <<<HTML
 <tr style="border-top: 1px solid #ccc;"><td style="{$totalLabelStyle}"><strong>{$totalLabel}</strong></td><td style="{$totalValueStyle}"><strong>{$total} {$currency}</strong></td></tr>
+HTML;
+
+        return <<<HTML
+<table cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-top: 15px; margin-bottom: 25px;">
+{$rows}
 </table>
 HTML;
     }
