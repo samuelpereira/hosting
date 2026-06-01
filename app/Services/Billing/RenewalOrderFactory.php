@@ -129,7 +129,7 @@ class RenewalOrderFactory
 
         $lines = [[
             'type' => OrderItemType::Domain,
-            'description' => $domain->renewalOrderLineDescription($renewalDueDate),
+            'description' => $domain->renewalOrderLineDescription(),
             'line_subtotal_minor' => $amountMinor,
             'domain_id' => $domain->id,
             'is_domain' => true,

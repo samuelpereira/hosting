@@ -7,7 +7,7 @@ use App\Models\Domain;
 use App\Models\Registrar;
 use Illuminate\Support\Carbon;
 
-test('renewal order line description uses due_at and billing interval', function () {
+test('renewal order line description uses expires_at and billing interval', function () {
     $client = Client::query()->create([
         'name' => 'Desc Client',
         'email' => 'desc@example.test',
@@ -30,15 +30,34 @@ test('renewal order line description uses due_at and billing interval', function
         'interval_unit' => IntervalUnit::Year,
         'interval_count' => 2,
         'registered_at' => '2024-01-01',
-        'expires_at' => '2026-06-01',
+        'expires_at' => '2026-08-15',
         'due_at' => '2026-06-01',
         'auto_renew' => true,
     ]);
 
-    $start = Carbon::parse('2026-06-01');
+    $start = Carbon::parse('2026-08-15');
     $end = $start->copy()->addYears(2);
 
     expect($domain->renewalOrderLineDescription())->toBe(
         sprintf('Renovação de Domínio - example.pt (%s - %s)', $start->format('d/m/Y'), $end->format('d/m/Y')),
+    );
+});
+
+test('renewal order line description falls back to due_at when expires_at is missing', function () {
+    $domain = Domain::make([
+        'fqdn' => 'fallback.pt',
+        'status' => DomainStatus::Active,
+        'currency' => 'EUR',
+        'interval_unit' => IntervalUnit::Year,
+        'interval_count' => 1,
+        'due_at' => '2026-06-01',
+    ]);
+    $domain->expires_at = null;
+
+    $start = Carbon::parse('2026-06-01');
+    $end = $start->copy()->addYear();
+
+    expect($domain->renewalOrderLineDescription())->toBe(
+        sprintf('Renovação de Domínio - fallback.pt (%s - %s)', $start->format('d/m/Y'), $end->format('d/m/Y')),
     );
 });

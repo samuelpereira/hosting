@@ -163,7 +163,7 @@ class Domain extends Model
     {
         $start = $periodStart !== null
             ? Carbon::instance($periodStart)->startOfDay()
-            : ($this->due_at?->copy()->startOfDay());
+            : ($this->expires_at?->copy()->startOfDay() ?? $this->due_at?->copy()->startOfDay());
 
         if ($start === null) {
             return sprintf('Renovação de Domínio - %s', $this->fqdn);
