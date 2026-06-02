@@ -7,7 +7,7 @@
 
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <flux:card class="p-4">
-                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Active clients') }}</flux:text>
+                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Clients') }}</flux:text>
                 <flux:heading size="lg" class="mt-1">{{ $statClients }}</flux:heading>
                 <flux:link :href="route('billing.clients.index')" wire:navigate class="mt-2 inline-block text-sm">
                     {{ __('View clients') }}

@@ -2,7 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Enums\DomainStatus;
 use App\Enums\OrderStatus;
+use App\Enums\ServiceStatus;
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\Order;
@@ -25,8 +27,8 @@ class Dashboard extends Component
 
         return view('livewire.dashboard', [
             'statClients' => Client::query()->where('is_active', true)->count(),
-            'statServices' => Service::query()->count(),
-            'statDomains' => Domain::query()->count(),
+            'statServices' => Service::query()->where('status', ServiceStatus::Active->value)->count(),
+            'statDomains' => Domain::query()->where('status', DomainStatus::Active->value)->count(),
             'statOpenOrders' => Order::query()->whereIn('status', [
                 OrderStatus::Draft->value,
                 OrderStatus::Unpaid->value,
