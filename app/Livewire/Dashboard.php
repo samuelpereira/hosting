@@ -28,7 +28,8 @@ class Dashboard extends Component
         return view('livewire.dashboard', [
             'statClients' => Client::query()->where('is_active', true)->count(),
             'statServices' => Service::query()->where('status', ServiceStatus::Active->value)->count(),
-            'statDomains' => Domain::query()->where('status', DomainStatus::Active->value)->count(),
+            'statDomainsActive' => Domain::query()->where('status', DomainStatus::Active->value)->count(),
+            'statDomainsExpired' => Domain::query()->where('status', DomainStatus::Expired->value)->count(),
             'statOpenOrders' => Order::query()->whereIn('status', [
                 OrderStatus::Draft->value,
                 OrderStatus::Unpaid->value,

@@ -22,7 +22,12 @@
             </flux:card>
             <flux:card class="p-4">
                 <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Domains') }}</flux:text>
-                <flux:heading size="lg" class="mt-1">{{ $statDomains }}</flux:heading>
+                <flux:heading size="lg" class="mt-1">{{ $statDomainsActive + $statDomainsExpired }}</flux:heading>
+                @if ($statDomainsExpired > 0)
+                    <flux:text class="text-xs text-zinc-500 dark:text-zinc-400">
+                        {{ __(':active active · :expired expired', ['active' => $statDomainsActive, 'expired' => $statDomainsExpired]) }}
+                    </flux:text>
+                @endif
                 <flux:link :href="route('billing.domains.index')" wire:navigate class="mt-2 inline-block text-sm">
                     {{ __('View domains') }}
                 </flux:link>
