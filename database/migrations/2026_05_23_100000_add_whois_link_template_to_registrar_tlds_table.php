@@ -15,9 +15,17 @@ return new class extends Migration
 
         $defaults = [
             'pt' => 'https://www.pt.pt/pt/ferramentas/whois/detalhes/?site={site}&tld={tld_dot}',
+            'com.pt' => 'https://www.pt.pt/pt/ferramentas/whois/detalhes/?site={site}&tld={tld_dot}',
+            'edu.pt' => 'https://www.pt.pt/pt/ferramentas/whois/detalhes/?site={site}&tld={tld_dot}',
             'com' => 'https://rdap.registrar.cloudflare.com/{fqdn}/whois',
             'net' => 'https://rdap.registrar.cloudflare.com/{fqdn}/whois',
             'org' => 'https://rdap.registrar.cloudflare.com/{fqdn}/whois',
+            'de' => 'https://webwhois.denic.de/?lang=en&query={fqdn}',
+            'eu' => 'https://whois.eurid.eu/en/search/?domain={fqdn}',
+            'es' => 'https://nic.es/sgnd/dominio/publicBuscarDominios.action?tDominio.nombreDominio={site}&flag=activado',
+            'fr' => 'https://www.namecheap.com/domains/whois/result?domain={fqdn}',
+            'io' => 'https://www.namecheap.com/domains/whois/result?domain={fqdn}',
+            'ma' => 'https://whois-lookup.ma/whois/{fqdn}',
         ];
 
         foreach ($defaults as $tld => $template) {
