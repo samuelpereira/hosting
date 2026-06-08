@@ -316,6 +316,7 @@ class Manage extends Component
 
         return view('livewire.billing.domains.manage', [
             'title' => $title,
+            'whoisUrl' => RegistrarTld::resolveWhoisUrl($this->registrar_id, $this->registrar_tld_id, $this->fqdn),
             'clients' => $this->domain === null
                 ? Client::query()->orderBy('name')->get(['id', 'name'])
                 : collect(),

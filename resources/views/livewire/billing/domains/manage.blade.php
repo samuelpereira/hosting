@@ -88,7 +88,15 @@
                 <option value="{{ $t->id }}">.{{ $t->tld }}</option>
             @endforeach
         </flux:select>
-        <flux:input wire:model="fqdn" :label="__('FQDN')" required />
+        <div class="space-y-1">
+            <flux:input wire:model.live.debounce.300ms="fqdn" :label="__('FQDN')" required />
+            @if ($whoisUrl)
+                <flux:link href="{{ $whoisUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sm">
+                    {{ __('View WHOIS') }}
+                    <flux:icon name="arrow-top-right-on-square" variant="micro" />
+                </flux:link>
+            @endif
+        </div>
         <flux:input wire:model="currency" maxlength="3" :label="__('Currency')" required />
         <div class="grid gap-4 sm:grid-cols-2">
             <flux:input wire:model="first_payment_amount_input" :label="__('First payment amount')" />

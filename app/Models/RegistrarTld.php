@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RegistrarTld extends Model
 {
-    protected $fillable = ['registrar_id', 'tld'];
+    protected $fillable = ['registrar_id', 'tld', 'whois_link_template'];
 
     public static function normalizeTld(string $tld): string
     {
@@ -35,6 +35,65 @@ class RegistrarTld extends Model
         foreach (self::query()->get(['id', 'registrar_id', 'tld']) as $row) {
             if (self::normalizeTld($row->tld) === $normalized) {
                 return (int) $row->id;
+            }
+        }
+
+        return null;
+    }
+
+    public function whoisUrlForFqdn(string $fqdn): ?string
+    {
+        $template = trim((string) ($this->whois_link_template ?? ''));
+        if ($template === '') {
+            return null;
+        }
+
+        $fqdn = strtolower(trim($fqdn));
+        if ($fqdn === '') {
+            return null;
+        }
+
+        $tldNormalized = self::normalizeTld($this->tld);
+        $suffix = '.'.$tldNormalized;
+        $site = str_ends_with($fqdn, $suffix)
+            ? substr($fqdn, 0, -strlen($suffix))
+            : $fqdn;
+
+        return str_replace(
+            ['{fqdn}', '{site}', '{tld}', '{tld_dot}'],
+            [$fqdn, $site, $tldNormalized, '.'.$tldNormalized],
+            $template,
+        );
+    }
+
+    public static function resolveWhoisUrl(?int $registrarId, ?int $registrarTldId, string $fqdn): ?string
+    {
+        $fqdn = strtolower(trim($fqdn));
+        if ($fqdn === '') {
+            return null;
+        }
+
+        if ($registrarTldId) {
+            $tld = self::query()->find($registrarTldId);
+
+            return $tld?->whoisUrlForFqdn($fqdn);
+        }
+
+        if ($registrarId === null || $registrarId <= 0) {
+            return null;
+        }
+
+        $candidates = self::query()
+            ->where('registrar_id', $registrarId)
+            ->whereNotNull('whois_link_template')
+            ->where('whois_link_template', '!=', '')
+            ->orderByRaw('length(tld) desc')
+            ->get();
+
+        foreach ($candidates as $tld) {
+            $suffix = '.'.self::normalizeTld($tld->tld);
+            if (str_ends_with($fqdn, $suffix)) {
+                return $tld->whoisUrlForFqdn($fqdn);
             }
         }
 

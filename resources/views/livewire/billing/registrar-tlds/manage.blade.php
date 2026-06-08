@@ -10,6 +10,14 @@
             @endforeach
         </flux:select>
         <flux:input wire:model="tld" :label="__('TLD (without dot)')" placeholder="com" required />
+        <flux:input
+            wire:model="whois_link_template"
+            :label="__('WHOIS link template')"
+            placeholder="https://rdap.registrar.cloudflare.com/{fqdn}/whois"
+        />
+        <flux:text class="text-sm text-zinc-500">
+            {{ __('Optional. Placeholders: {fqdn}, {site}, {tld}, {tld_dot}.') }}
+        </flux:text>
 
         <div class="space-y-4">
             <div class="flex items-center justify-between">

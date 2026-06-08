@@ -18,6 +18,8 @@ class Manage extends Component
 
     public string $tld = '';
 
+    public string $whois_link_template = '';
+
     /** @var array<int, array{id: ?int, operation: string, term_years: int, currency: string, amount_input: string, domain_cost_input: string, is_active: bool}> */
     public array $priceRows = [];
 
@@ -27,6 +29,7 @@ class Manage extends Component
         if ($registrarTld) {
             $this->registrar_id = $registrarTld->registrar_id;
             $this->tld = ltrim($registrarTld->tld, '.');
+            $this->whois_link_template = (string) ($registrarTld->whois_link_template ?? '');
             $this->priceRows = $registrarTld->prices()->orderBy('id')->get()->map(fn (RegistrarTldPrice $p) => [
                 'id' => $p->id,
                 'operation' => $p->operation->value,
@@ -77,6 +80,7 @@ class Manage extends Component
         $this->validate([
             'registrar_id' => ['required', 'exists:registrars,id'],
             'tld' => ['required', 'string', 'max:32', 'regex:/^[a-z0-9-]+$/', $uniqueRule],
+            'whois_link_template' => ['nullable', 'string', 'max:512'],
             'priceRows' => ['required', 'array', 'min:1'],
             'priceRows.*.operation' => ['required', Rule::enum(RegistrarTldPriceOperation::class)],
             'priceRows.*.term_years' => ['required', 'integer', 'min:1', 'max:10'],
@@ -104,6 +108,7 @@ class Manage extends Component
         $payload = [
             'registrar_id' => $this->registrar_id,
             'tld' => $normalized,
+            'whois_link_template' => trim($this->whois_link_template) !== '' ? trim($this->whois_link_template) : null,
         ];
 
         if ($this->registrarTld) {
