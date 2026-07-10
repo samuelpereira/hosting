@@ -94,6 +94,25 @@ class Service extends Model
         };
     }
 
+    public function renewalBillableAmountMinor(): int
+    {
+        return (int) ($this->recurring_amount_minor ?? $this->first_payment_amount_minor ?? 0);
+    }
+
+    public function isBillableForRenewal(): bool
+    {
+        return $this->renewalBillableAmountMinor() > 0;
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<self>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<self>
+     */
+    public function scopeBillableForRenewal($query)
+    {
+        return $query->whereRaw('COALESCE(recurring_amount_minor, first_payment_amount_minor, 0) > 0');
+    }
+
     public function renewalOrderLineDescription(?CarbonInterface $periodStart = null): string
     {
         $this->loadMissing(['product', 'domain']);

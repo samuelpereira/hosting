@@ -91,7 +91,9 @@ class BillingAutomationRunner
         Domain::query()
             ->whereIn('status', [DomainStatus::Active, DomainStatus::Expired])
             ->where('auto_renew', true)
-            ->whereDoesntHave('services', fn ($q) => $q->where('status', ServiceStatus::Active))
+            ->whereDoesntHave('services', fn ($q) => $q
+                ->where('status', ServiceStatus::Active)
+                ->billableForRenewal())
             ->whereNotNull('due_at')
             ->whereDate('due_at', '<=', $today->copy()->addDays($settings->domain_order_days_before))
             ->whereDate('due_at', '>=', $today->copy()->subDays($settings->domain_order_days_before))

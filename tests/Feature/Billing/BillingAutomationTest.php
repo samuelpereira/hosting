@@ -221,6 +221,54 @@ test('skips domain when covered by active service', function () {
     Carbon::setTestNow();
 });
 
+test('creates standalone domain renewal order when linked service is free', function () {
+    Carbon::setTestNow('2026-05-19 09:00:00');
+
+    $client = Client::query()->create([
+        'name' => 'Free Hosting Client',
+        'email' => 'free-hosting@example.test',
+        'currency' => 'EUR',
+        'is_active' => true,
+    ]);
+
+    $product = Product::query()->create([
+        'type' => \App\Enums\ProductType::Hosting,
+        'name' => 'Free Plan',
+        'slug' => 'free-plan',
+        'is_active' => true,
+    ]);
+
+    $domainDue = now()->addDays(30)->startOfDay();
+    $registrar = createTestRegistrar();
+    $domain = createTestDomain($client, $registrar, 'free-hosting.test', $domainDue, 2_000);
+
+    Service::query()->create([
+        'client_id' => $client->id,
+        'product_id' => $product->id,
+        'currency' => 'EUR',
+        'recurring_amount_minor' => null,
+        'first_payment_amount_minor' => null,
+        'interval_unit' => 'month',
+        'interval_count' => 1,
+        'domain_id' => $domain->id,
+        'associated_domain' => $domain->fqdn,
+        'status' => ServiceStatus::Active,
+        'due_at' => null,
+    ]);
+
+    $result = app(BillingAutomationRunner::class)->run(force: true);
+
+    expect($result['orders_created'])->toBe(1);
+
+    $order = Order::query()->where('client_id', $client->id)->first();
+    expect($order)->not->toBeNull()
+        ->and($order->items)->toHaveCount(1)
+        ->and($order->items->first()->type)->toBe(OrderItemType::Domain)
+        ->and($order->items->first()->domain_id)->toBe($domain->id);
+
+    Carbon::setTestNow();
+});
+
 test('catch-up creates renewal orders missed on previous days', function () {
     Carbon::setTestNow('2026-05-22 09:00:00');
 

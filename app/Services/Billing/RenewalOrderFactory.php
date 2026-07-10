@@ -182,7 +182,7 @@ class RenewalOrderFactory
      */
     private function buildServiceLines(Service $service, CarbonInterface $renewalDueDate): array
     {
-        $serviceAmountMinor = (int) ($service->recurring_amount_minor ?? $service->first_payment_amount_minor ?? 0);
+        $serviceAmountMinor = $service->renewalBillableAmountMinor();
         if ($serviceAmountMinor <= 0) {
             return [];
         }

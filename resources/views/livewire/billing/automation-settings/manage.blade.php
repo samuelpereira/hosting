@@ -23,7 +23,7 @@
             </flux:text>
             <flux:input wire:model="domain_order_days_before" type="number" min="0" max="365" :label="__('Standalone domains: days before due_at')" />
             <flux:text class="text-sm text-zinc-500">
-                {{ __('Domains without an active linked service get their own order.') }}
+                {{ __('Domains without a billable active service (or with only a free linked service) get their own order.') }}
             </flux:text>
         </flux:card>
 
