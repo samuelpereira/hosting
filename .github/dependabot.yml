@@ -6,6 +6,10 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 10
+    groups:
+      composer:
+        patterns:
+          - "*"
 
   - package-ecosystem: npm
     directory: /
@@ -13,8 +17,16 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 10
+    groups:
+      npm:
+        patterns:
+          - "*"
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
