@@ -7,9 +7,9 @@ use App\Enums\IntervalUnit;
 use App\Enums\RegistrarTldPriceOperation;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class Domain extends Model
 {

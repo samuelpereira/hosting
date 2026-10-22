@@ -5,11 +5,12 @@ namespace App\Models;
 use App\Enums\IntervalUnit;
 use App\Enums\ServiceStatus;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class Service extends Model
 {
@@ -105,8 +106,8 @@ class Service extends Model
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<self>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<self>
+     * @param  Builder<self>  $query
+     * @return Builder<self>
      */
     public function scopeBillableForRenewal($query)
     {

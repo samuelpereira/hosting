@@ -19,6 +19,7 @@ class Manage extends Component
     private const DOCUMENT_MIMES = 'pdf,jpg,jpeg,png,webp,gif,doc,docx';
 
     private const DOCUMENT_MAX_KB = 10240;
+
     public ?Transaction $transaction = null;
 
     public ?int $order_id = null;

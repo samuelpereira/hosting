@@ -1,8 +1,10 @@
 <?php
 
+use App\Enums\DomainStatus;
 use App\Enums\IntervalUnit;
 use App\Enums\OrderItemType;
 use App\Enums\OrderStatus;
+use App\Enums\ProductType;
 use App\Enums\ServiceStatus;
 use App\Enums\TransactionStatus;
 use App\Livewire\Billing\Transactions\Manage as TransactionsManage;
@@ -38,7 +40,7 @@ function createOrderPaymentRenewalDomain(
         'client_id' => $client->id,
         'registrar_id' => $registrar->id,
         'fqdn' => $fqdn,
-        'status' => \App\Enums\DomainStatus::Active,
+        'status' => DomainStatus::Active,
         'currency' => 'EUR',
         'interval_unit' => IntervalUnit::Year,
         'interval_count' => $intervalCount,
@@ -69,7 +71,7 @@ test('completed payment extends service and linked domain billing dates', functi
     $service = Service::query()->create([
         'client_id' => $client->id,
         'product_id' => Product::query()->create([
-            'type' => \App\Enums\ProductType::Hosting,
+            'type' => ProductType::Hosting,
             'name' => 'Hosting',
             'slug' => 'hosting-renewal',
             'is_active' => true,
@@ -187,7 +189,7 @@ test('payment does not double-extend dates when order is already paid', function
             'is_active' => true,
         ])->id,
         'product_id' => Product::query()->create([
-            'type' => \App\Enums\ProductType::Vps,
+            'type' => ProductType::Vps,
             'name' => 'VPS',
             'slug' => 'vps-double',
             'is_active' => true,

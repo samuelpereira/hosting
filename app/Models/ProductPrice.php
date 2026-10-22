@@ -6,6 +6,7 @@ use App\Enums\IntervalUnit;
 use App\Enums\ProductPriceBillingKind;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class ProductPrice extends Model
 {
     protected $fillable = [

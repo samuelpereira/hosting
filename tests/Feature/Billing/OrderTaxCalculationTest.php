@@ -1,8 +1,10 @@
 <?php
 
+use App\Livewire\Billing\Orders\Manage;
 use App\Livewire\Billing\Orders\Manage as OrdersManage;
 use App\Models\BillingTaxSetting;
 use App\Models\Client;
+use App\Models\Order;
 use App\Models\User;
 use Livewire\Livewire;
 
@@ -89,7 +91,7 @@ test('order line shows vat only label for domain when domains irs exception enab
     $user = User::factory()->create(['email_verified_at' => now()]);
     $this->actingAs($user);
 
-    Livewire::test(\App\Livewire\Billing\Orders\Manage::class)
+    Livewire::test(Manage::class)
         ->set('client_id', $client->id)
         ->set('lineItems.0.type', 'domain')
         ->assertSee(__('VAT only'));
@@ -114,7 +116,7 @@ test('order line shows no tax badge in green when client is fully exempt', funct
     $user = User::factory()->create(['email_verified_at' => now()]);
     $this->actingAs($user);
 
-    Livewire::test(\App\Livewire\Billing\Orders\Manage::class)
+    Livewire::test(Manage::class)
         ->set('client_id', $client->id)
         ->assertSee(__('No tax'));
 });
@@ -137,7 +139,7 @@ test('order line shows vat and irs label for service lines', function () {
     $user = User::factory()->create(['email_verified_at' => now()]);
     $this->actingAs($user);
 
-    Livewire::test(\App\Livewire\Billing\Orders\Manage::class)
+    Livewire::test(Manage::class)
         ->set('client_id', $client->id)
         ->set('lineItems.0.type', 'service')
         ->assertSee(__('VAT + IRS'));
@@ -170,7 +172,7 @@ test('order save persists subtotal tax irs and total', function () {
         ->assertHasNoErrors()
         ->assertRedirect();
 
-    $order = \App\Models\Order::query()->where('number', 'ORD-TAX-TEST-1')->first();
+    $order = Order::query()->where('number', 'ORD-TAX-TEST-1')->first();
     expect($order)->not->toBeNull()
         ->and($order->subtotal_minor)->toBe(10_000)
         ->and($order->tax_minor)->toBe(2300)

@@ -1,7 +1,9 @@
 <?php
 
+use App\Enums\DomainStatus;
 use App\Enums\IntervalUnit;
 use App\Enums\RegistrarTldPriceOperation;
+use App\Models\Client;
 use App\Models\Domain;
 use App\Models\Registrar;
 use App\Models\RegistrarTld;
@@ -30,7 +32,7 @@ test('domain monthly cost comes from linked tld price not domain record', functi
     ]);
 
     $domain = Domain::query()->create([
-        'client_id' => \App\Models\Client::query()->create([
+        'client_id' => Client::query()->create([
             'name' => 'Cost Client',
             'email' => 'cost@example.test',
             'currency' => 'EUR',
@@ -40,7 +42,7 @@ test('domain monthly cost comes from linked tld price not domain record', functi
         'registrar_tld_id' => $tld->id,
         'registrar_tld_price_id' => $price->id,
         'fqdn' => 'cost.example.pt',
-        'status' => \App\Enums\DomainStatus::Active,
+        'status' => DomainStatus::Active,
         'currency' => 'EUR',
         'recurring_amount_minor' => 20_00,
         'interval_unit' => IntervalUnit::Year,

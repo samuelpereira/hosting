@@ -1,13 +1,11 @@
 <?php
 
-use App\Enums\OrderStatus;
-use App\Jobs\SendClientBillingEmailJob;
 use App\Enums\ContactRole;
+use App\Jobs\SendClientBillingEmailJob;
 use App\Models\Client;
 use App\Models\ClientEmailLog;
 use App\Models\Contact;
 use App\Models\EmailTemplate;
-use App\Models\Order;
 use App\Services\Billing\BillingEmailSender;
 use Database\Seeders\EmailTemplateSeeder;
 use Illuminate\Support\Facades\Queue;

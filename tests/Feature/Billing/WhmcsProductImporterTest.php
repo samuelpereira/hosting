@@ -5,6 +5,7 @@ use App\Models\Product;
 use App\Services\Whmcs\WhmcsHostingImporter;
 use App\Services\Whmcs\WhmcsProductImporter;
 use App\Services\Whmcs\WhmcsProductMap;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 test('whmcs product importer links mapped names without creating products', function () {
@@ -13,7 +14,7 @@ test('whmcs product importer links mapped names without creating products', func
         $table->string('name');
     });
 
-    \Illuminate\Support\Facades\DB::table('tblproducts')->insert([
+    DB::table('tblproducts')->insert([
         ['id' => 42, 'name' => 'WHMCS VPS 50G'],
         ['id' => 99, 'name' => 'Unmapped Product'],
     ]);
@@ -51,7 +52,7 @@ test('hosting import resolves packageid when another whmcs product already owns 
         $table->string('name');
     });
 
-    \Illuminate\Support\Facades\DB::table('tblproducts')->insert([
+    DB::table('tblproducts')->insert([
         ['id' => 5, 'name' => 'Web M'],
         ['id' => 16, 'name' => 'Webmin Web M'],
     ]);

@@ -13,7 +13,7 @@
  */
 return [
     'names' => [
-        //'Web S' => 'web-s',
+        // 'Web S' => 'web-s',
     ],
 
     'ids' => [

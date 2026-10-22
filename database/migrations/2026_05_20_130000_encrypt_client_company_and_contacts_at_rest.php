@@ -104,7 +104,7 @@ return new class extends Migration
             Crypt::decrypt($value, false);
 
             return $value;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return Crypt::encrypt($value, false);
         }
     }
@@ -117,7 +117,7 @@ return new class extends Migration
 
         try {
             return Crypt::decrypt($value, false);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return $value;
         }
     }

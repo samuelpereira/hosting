@@ -3,6 +3,7 @@
 use App\Enums\DomainStatus;
 use App\Enums\OrderItemType;
 use App\Enums\OrderStatus;
+use App\Enums\ProductType;
 use App\Enums\ServiceStatus;
 use App\Livewire\Billing\AutomationSettings\Manage as AutomationSettingsManage;
 use App\Models\BillingAutomationSetting;
@@ -15,6 +16,7 @@ use App\Models\Registrar;
 use App\Models\Service;
 use App\Models\User;
 use App\Services\Billing\BillingAutomationRunner;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
@@ -32,7 +34,7 @@ function createTestDomain(
     Client $client,
     Registrar $registrar,
     string $fqdn,
-    \Carbon\CarbonInterface $dueAt,
+    CarbonInterface $dueAt,
     int $recurringMinor = 1_000,
     DomainStatus $status = DomainStatus::Active,
     bool $autoRenew = true,
@@ -104,7 +106,7 @@ test('creates service renewal order with product and synced domain lines', funct
     ]);
 
     $product = Product::query()->create([
-        'type' => \App\Enums\ProductType::Hosting,
+        'type' => ProductType::Hosting,
         'name' => 'Hosting Plan',
         'slug' => 'hosting-auto',
         'is_active' => true,
@@ -188,7 +190,7 @@ test('skips domain when covered by active service', function () {
     ]);
 
     $product = Product::query()->create([
-        'type' => \App\Enums\ProductType::Hosting,
+        'type' => ProductType::Hosting,
         'name' => 'Plan',
         'slug' => 'plan-linked',
         'is_active' => true,
@@ -232,7 +234,7 @@ test('creates standalone domain renewal order when linked service is free', func
     ]);
 
     $product = Product::query()->create([
-        'type' => \App\Enums\ProductType::Hosting,
+        'type' => ProductType::Hosting,
         'name' => 'Free Plan',
         'slug' => 'free-plan',
         'is_active' => true,
@@ -280,7 +282,7 @@ test('catch-up creates renewal orders missed on previous days', function () {
     ]);
 
     $product = Product::query()->create([
-        'type' => \App\Enums\ProductType::Hosting,
+        'type' => ProductType::Hosting,
         'name' => 'Plan',
         'slug' => 'plan-catchup',
         'is_active' => true,
@@ -320,7 +322,7 @@ test('does not create renewal order for inactive service', function () {
     ]);
 
     $product = Product::query()->create([
-        'type' => \App\Enums\ProductType::Hosting,
+        'type' => ProductType::Hosting,
         'name' => 'Plan',
         'slug' => 'plan-suspended',
         'is_active' => true,
@@ -357,7 +359,7 @@ test('service renewal order omits synced domain when domain is not active or exp
     ]);
 
     $product = Product::query()->create([
-        'type' => \App\Enums\ProductType::Hosting,
+        'type' => ProductType::Hosting,
         'name' => 'Plan',
         'slug' => 'plan-cancelled-domain',
         'is_active' => true,
@@ -422,7 +424,7 @@ test('service renewal order omits synced domain when auto renew is disabled', fu
     ]);
 
     $product = Product::query()->create([
-        'type' => \App\Enums\ProductType::Hosting,
+        'type' => ProductType::Hosting,
         'name' => 'Plan',
         'slug' => 'plan-no-auto-bundle',
         'is_active' => true,
@@ -487,7 +489,7 @@ test('service renewal order includes synced domain when domain is expired', func
     ]);
 
     $product = Product::query()->create([
-        'type' => \App\Enums\ProductType::Hosting,
+        'type' => ProductType::Hosting,
         'name' => 'Plan',
         'slug' => 'plan-expired-domain',
         'is_active' => true,
@@ -533,7 +535,7 @@ test('does not create renewal order before lead time window', function () {
     ]);
 
     $product = Product::query()->create([
-        'type' => \App\Enums\ProductType::Hosting,
+        'type' => ProductType::Hosting,
         'name' => 'Plan',
         'slug' => 'plan-early',
         'is_active' => true,

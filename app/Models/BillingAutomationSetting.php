@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 class BillingAutomationSetting extends Model

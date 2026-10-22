@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\IntervalUnit;
+use App\Enums\ProductType;
 use App\Enums\ServiceStatus;
 use App\Models\Client;
 use App\Models\Product;
@@ -16,7 +17,7 @@ test('service renewal order line description uses due_at domain and billing inte
     ]);
 
     $product = Product::query()->create([
-        'type' => \App\Enums\ProductType::Hosting,
+        'type' => ProductType::Hosting,
         'name' => 'Hosting Plan',
         'slug' => 'hosting-desc',
         'is_active' => true,

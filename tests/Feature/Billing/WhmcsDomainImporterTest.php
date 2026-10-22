@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\IntervalUnit;
+use App\Enums\RegistrarTldPriceOperation;
 use App\Models\Client;
 use App\Models\Registrar;
 use App\Models\RegistrarTld;
@@ -98,7 +99,7 @@ test('whmcs domain importer falls back to tld interval when registrationperiod i
     ]);
 
     $tld->prices()->create([
-        'operation' => \App\Enums\RegistrarTldPriceOperation::Renew,
+        'operation' => RegistrarTldPriceOperation::Renew,
         'term_years' => 2,
         'amount_minor' => 2_000,
         'currency' => 'EUR',

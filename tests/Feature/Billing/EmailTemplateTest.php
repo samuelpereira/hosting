@@ -1,6 +1,11 @@
 <?php
 
+use App\Enums\IntervalUnit;
+use App\Enums\OrderItemType;
 use App\Enums\OrderStatus;
+use App\Enums\ProductType;
+use App\Enums\ServerStatus;
+use App\Enums\ServiceStatus;
 use App\Enums\TransactionStatus;
 use App\Livewire\Billing\Orders\Manage as OrdersManage;
 use App\Livewire\Billing\Services\Manage as ServicesManage;
@@ -9,6 +14,9 @@ use App\Models\BillingTaxSetting;
 use App\Models\Client;
 use App\Models\EmailTemplate;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\Server;
+use App\Models\Service;
 use App\Models\Transaction;
 use App\Models\User;
 use Database\Seeders\EmailTemplateSeeder;
@@ -30,26 +38,26 @@ test('email template seeder creates example templates', function () {
 });
 
 test('service billing interval normalizes recurring to monthly and yearly', function () {
-    $client = \App\Models\Client::query()->create([
+    $client = Client::query()->create([
         'name' => 'Interval Co',
         'email' => 'interval@test.example',
         'currency' => 'EUR',
         'is_active' => true,
     ]);
-    $product = \App\Models\Product::query()->create([
-        'type' => \App\Enums\ProductType::Hosting,
+    $product = Product::query()->create([
+        'type' => ProductType::Hosting,
         'name' => 'Web',
         'slug' => 'web-interval',
         'is_active' => true,
     ]);
-    $service = \App\Models\Service::query()->create([
+    $service = Service::query()->create([
         'client_id' => $client->id,
         'product_id' => $product->id,
         'currency' => 'EUR',
         'recurring_amount_minor' => 30_00,
-        'interval_unit' => \App\Enums\IntervalUnit::Month,
+        'interval_unit' => IntervalUnit::Month,
         'interval_count' => 3,
-        'status' => \App\Enums\ServiceStatus::Active,
+        'status' => ServiceStatus::Active,
     ]);
 
     expect($service->monthlyAmountMinor())->toBe(10_00)
@@ -58,34 +66,34 @@ test('service billing interval normalizes recurring to monthly and yearly', func
 });
 
 test('service welcome email variables include credentials', function () {
-    $client = \App\Models\Client::query()->create([
+    $client = Client::query()->create([
         'name' => 'Acme',
         'email' => 'acme@test.example',
         'currency' => 'EUR',
         'is_active' => true,
     ]);
-    $product = \App\Models\Product::query()->create([
-        'type' => \App\Enums\ProductType::Hosting,
+    $product = Product::query()->create([
+        'type' => ProductType::Hosting,
         'name' => 'Web S',
         'slug' => 'web-s',
         'is_active' => true,
     ]);
-    $server = \App\Models\Server::query()->create([
+    $server = Server::query()->create([
         'name' => 'Node 1',
         'hostname' => 'node1.test.example',
         'panel_url' => 'https://panel.test.example',
-        'status' => \App\Enums\ServerStatus::Active,
+        'status' => ServerStatus::Active,
         'cost_amount_minor' => 100_00,
         'cost_currency' => 'EUR',
     ]);
-    $service = \App\Models\Service::query()->create([
+    $service = Service::query()->create([
         'client_id' => $client->id,
         'product_id' => $product->id,
         'server_id' => $server->id,
         'username' => 'acme_web',
         'password' => 's3cret-pass',
         'currency' => 'EUR',
-        'status' => \App\Enums\ServiceStatus::Active,
+        'status' => ServiceStatus::Active,
     ]);
 
     $vars = $service->welcomeEmailVariables();
@@ -138,7 +146,7 @@ test('order email variables include html line descriptions', function () {
     ]);
     $order->items()->create([
         'position' => 0,
-        'type' => \App\Enums\OrderItemType::Service,
+        'type' => OrderItemType::Service,
         'description' => 'Hosting - example.pt (01/06/2026 - 01/07/2026)',
         'quantity' => 1,
         'unit_amount_minor' => 30_00,
@@ -146,7 +154,7 @@ test('order email variables include html line descriptions', function () {
     ]);
     $order->items()->create([
         'position' => 1,
-        'type' => \App\Enums\OrderItemType::Domain,
+        'type' => OrderItemType::Domain,
         'description' => 'Renovação de Domínio - example.pt (01/06/2026 - 01/06/2027)',
         'quantity' => 1,
         'unit_amount_minor' => 20_00,
@@ -248,7 +256,7 @@ test('order_created template renders order line items', function () {
     ]);
     $order->items()->create([
         'position' => 0,
-        'type' => \App\Enums\OrderItemType::Manual,
+        'type' => OrderItemType::Manual,
         'description' => 'Linha de teste',
         'quantity' => 1,
         'unit_amount_minor' => 10_00,
@@ -287,7 +295,7 @@ test('order_payment_reminder template renders order totals after line items', fu
     ]);
     $order->items()->create([
         'position' => 0,
-        'type' => \App\Enums\OrderItemType::Manual,
+        'type' => OrderItemType::Manual,
         'description' => 'Serviço mensal',
         'quantity' => 1,
         'unit_amount_minor' => 50_00,
@@ -370,21 +378,21 @@ test('service edit can send welcome email to client', function () {
         'currency' => 'EUR',
         'is_active' => true,
     ]);
-    $product = \App\Models\Product::query()->create([
-        'type' => \App\Enums\ProductType::Hosting,
+    $product = Product::query()->create([
+        'type' => ProductType::Hosting,
         'name' => 'Web M',
         'slug' => 'web-m-welcome',
         'is_active' => true,
     ]);
-    $server = \App\Models\Server::query()->create([
+    $server = Server::query()->create([
         'name' => 'Panel Node',
         'hostname' => 'panel.test.example',
         'panel_url' => 'https://panel.test.example',
-        'status' => \App\Enums\ServerStatus::Active,
+        'status' => ServerStatus::Active,
         'cost_amount_minor' => 50_00,
         'cost_currency' => 'EUR',
     ]);
-    $service = \App\Models\Service::query()->create([
+    $service = Service::query()->create([
         'client_id' => $client->id,
         'product_id' => $product->id,
         'server_id' => $server->id,
@@ -392,9 +400,9 @@ test('service edit can send welcome email to client', function () {
         'password' => 'welcome-pass',
         'associated_domain' => 'example.test',
         'currency' => 'EUR',
-        'interval_unit' => \App\Enums\IntervalUnit::Month,
+        'interval_unit' => IntervalUnit::Month,
         'interval_count' => 1,
-        'status' => \App\Enums\ServiceStatus::Active,
+        'status' => ServiceStatus::Active,
     ]);
 
     Livewire::test(ServicesManage::class, ['service' => $service])

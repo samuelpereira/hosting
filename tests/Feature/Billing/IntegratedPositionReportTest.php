@@ -5,6 +5,7 @@ use App\Enums\IntervalUnit;
 use App\Enums\ProductType;
 use App\Enums\RegistrarTldPriceOperation;
 use App\Enums\ServiceStatus;
+use App\Livewire\Billing\Reports\IntegratedPosition;
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\Product;
@@ -285,7 +286,7 @@ test('integrated position livewire page shows service and domain labels', functi
     ]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Billing\Reports\IntegratedPosition::class)
+        ->test(IntegratedPosition::class)
         ->assertSee('VPS Small')
         ->assertSee('beta.pt')
         ->assertSee('Integrated position');

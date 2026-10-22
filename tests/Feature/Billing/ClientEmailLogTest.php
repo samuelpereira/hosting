@@ -1,16 +1,16 @@
 <?php
 
+use App\Enums\ContactRole;
 use App\Enums\OrderStatus;
 use App\Enums\ProductType;
 use App\Enums\ServiceStatus;
 use App\Enums\TransactionStatus;
 use App\Livewire\Billing\Clients\Show as ClientsShow;
 use App\Livewire\Billing\Orders\Manage as OrdersManage;
-use App\Enums\ContactRole;
+use App\Mail\BillingTemplateMail;
 use App\Models\Client;
 use App\Models\ClientEmailLog;
 use App\Models\Contact;
-use App\Models\EmailTemplate;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Service;
@@ -102,7 +102,7 @@ test('sending order email cc includes contact addresses', function () {
         ->call('sendEmail')
         ->assertHasNoErrors();
 
-    Mail::assertSent(\App\Mail\BillingTemplateMail::class, function (\App\Mail\BillingTemplateMail $mail) {
+    Mail::assertSent(BillingTemplateMail::class, function (BillingTemplateMail $mail) {
         return $mail->hasTo('cc-client@test.example')
             && $mail->hasCc('finance@test.example');
     });
