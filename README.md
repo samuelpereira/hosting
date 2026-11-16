@@ -33,8 +33,9 @@ After=network.target
 User=www-data
 Group=www-data
 Restart=always
+RestartSec=5
 WorkingDirectory=/var/www/billing
-ExecStart=/usr/bin/php artisan queue:listen --name=billing --memory=128 --timeout=3600 --tries=5
+ExecStart=/usr/bin/php artisan queue:work --name=billing --memory=128 --timeout=3600 --tries=5 --max-time=3600
 
 [Install]
 WantedBy=multi-user.target
@@ -50,6 +51,24 @@ systemctl enable billing-queue.service
 
 ````
 service billing-queue start
+````
+
+### After each deploy
+
+`queue:work` keeps the application loaded in memory, so it must be restarted
+to pick up new code or `.env` changes.
+
+````
+php artisan queue:restart
+````
+
+`--max-time=3600` also restarts the worker every hour as a safety net.
+
+If the service file itself changes:
+
+````
+systemctl daemon-reload
+systemctl restart billing-queue
 ````
 
 ### Run migrations
