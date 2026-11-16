@@ -24,6 +24,10 @@ class BillingEmailSender
         'service_welcome',
     ];
 
+    /**
+     * $to is only the primary recipient; Owner/Billing contacts are added as CC
+     * automatically (see resolveDeliveryAddresses()).
+     */
     public function sendToClient(
         EmailTemplate $template,
         string $to,
@@ -52,6 +56,9 @@ class BillingEmailSender
     }
 
     /**
+     * $to is only the primary recipient; Owner/Billing contacts are added as CC
+     * automatically (see resolveDeliveryAddresses()).
+     *
      * @param  array<string, string|int|float|null>  $variables
      */
     public function sendServiceEmail(
@@ -116,6 +123,11 @@ class BillingEmailSender
     }
 
     /**
+     * Callers only pass the primary address ($primaryTo); the client's Owner/Billing
+     * contacts are always added here as CC, so callers must not add them again.
+     * "To" is the first of Client::billingEmailRecipients() (client email), and any
+     * extra $cc given by the caller is merged in after the contacts.
+     *
      * @return array{to: string, cc: string|null}
      */
     private function resolveDeliveryAddresses(int $clientId, string $primaryTo, ?string $cc): array

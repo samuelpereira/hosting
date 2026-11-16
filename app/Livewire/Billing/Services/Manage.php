@@ -747,6 +747,7 @@ class Manage extends Component
             return;
         }
 
+        // Primary address only; BillingEmailSender adds Owner/Billing contacts as CC.
         $clientEmail = $recipients[0];
 
         $template = EmailTemplate::query()

@@ -222,7 +222,7 @@ class BillingAutomationRunner
 
         $this->emailSender->sendToClient(
             $template,
-            $recipients[0],
+            $recipients[0], // contacts are CC'd by the sender
             $order->emailVariables(),
             $order->client_id,
             orderId: $order->id,
@@ -257,7 +257,7 @@ class BillingAutomationRunner
 
         $this->emailSender->sendToClient(
             $template,
-            $recipients[0],
+            $recipients[0], // contacts are CC'd by the sender
             $order->emailVariables(),
             $order->client_id,
             orderId: $order->id,

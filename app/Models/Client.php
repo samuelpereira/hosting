@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ContactRole;
 use App\Enums\DomainStatus;
 use App\Enums\ServiceStatus;
 use Illuminate\Database\Eloquent\Model;
@@ -61,8 +62,13 @@ class Client extends Model
         return $this->hasMany(Contact::class);
     }
 
+    /** Contact roles that receive billing emails (CC); technical/other contacts do not. */
+    public const BILLING_EMAIL_CONTACT_ROLES = [ContactRole::Owner, ContactRole::Billing];
+
     /**
-     * Unique billing email addresses: client first, then contacts (case-insensitive dedupe).
+     * Unique billing email addresses: client first, then Owner/Billing contacts
+     * (case-insensitive dedupe). The first address is used as "To", the rest as CC
+     * (see BillingEmailSender::resolveDeliveryAddresses()).
      *
      * @return list<string>
      */
@@ -76,8 +82,8 @@ class Client extends Model
         }
 
         $contacts = $this->relationLoaded('contacts')
-            ? $this->contacts
-            : $this->contacts()->get(['email']);
+            ? $this->contacts->filter(fn (Contact $contact) => in_array($contact->role, self::BILLING_EMAIL_CONTACT_ROLES, true))
+            : $this->contacts()->whereIn('role', self::BILLING_EMAIL_CONTACT_ROLES)->get(['email']);
 
         foreach ($contacts as $contact) {
             $contactEmail = strtolower(trim((string) $contact->email));

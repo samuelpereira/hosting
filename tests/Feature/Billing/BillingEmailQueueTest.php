@@ -90,3 +90,57 @@ test('queued billing email job retries on failure', function () {
     expect($job->tries)->toBe(5)
         ->and($job->backoff)->toBe([60, 120, 300, 600]);
 });
+
+test('billing email cc only includes owner and billing contacts', function () {
+    Queue::fake();
+    $this->seed(EmailTemplateSeeder::class);
+
+    $client = Client::query()->create([
+        'name' => 'Roles Client',
+        'email' => 'roles-client@test.example',
+        'currency' => 'EUR',
+        'is_active' => true,
+    ]);
+
+    foreach ([
+        ContactRole::Owner->value => 'owner@test.example',
+        ContactRole::Billing->value => 'billing@test.example',
+        ContactRole::Technical->value => 'tech@test.example',
+        ContactRole::Other->value => 'other@test.example',
+    ] as $role => $email) {
+        Contact::query()->create([
+            'client_id' => $client->id,
+            'name' => ucfirst($role).' Contact',
+            'email' => $email,
+            'role' => ContactRole::from($role),
+            'is_primary' => false,
+        ]);
+    }
+
+    expect($client->billingEmailRecipients())->toBe([
+        'roles-client@test.example',
+        'owner@test.example',
+        'billing@test.example',
+    ])->and($client->load('contacts')->billingEmailRecipients())->toBe([
+        'roles-client@test.example',
+        'owner@test.example',
+        'billing@test.example',
+    ]);
+
+    app(BillingEmailSender::class)->sendToClient(
+        EmailTemplate::query()->where('slug', 'order_created')->firstOrFail(),
+        $client->email,
+        ['client_name' => $client->name, 'order_number' => 'ORD-ROLES'],
+        $client->id,
+    );
+
+    Queue::assertPushed(SendClientBillingEmailJob::class, function (SendClientBillingEmailJob $job) {
+        $cc = (string) $job->cc;
+
+        return $job->to === 'roles-client@test.example'
+            && str_contains($cc, 'owner@test.example')
+            && str_contains($cc, 'billing@test.example')
+            && ! str_contains($cc, 'tech@test.example')
+            && ! str_contains($cc, 'other@test.example');
+    });
+});
