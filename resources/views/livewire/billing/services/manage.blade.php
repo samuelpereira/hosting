@@ -124,13 +124,29 @@
         <flux:input wire:model="associated_domain" :label="__('Associated domain (FQDN)')" placeholder="client.example.com" />
         <flux:text class="text-sm text-zinc-500">{{ __('Stored only on this service (per client), so each customer can use the same catalog product with their own hostname.') }}</flux:text>
 
-        @if (! $service?->domain_id)
+        <div class="space-y-2">
+            <flux:select wire:model.live="linked_domain_id" :label="__('Linked domain')" :disabled="! $client_id">
+                <option value="">{{ __('— None —') }}</option>
+                @foreach ($clientDomains as $d)
+                    <option value="{{ $d->id }}">{{ $d->fqdn }} ({{ $d->status->name }})</option>
+                @endforeach
+            </flux:select>
+            <flux:error name="linked_domain_id" />
+            @if ($linked_domain_id)
+                <flux:text class="text-sm text-zinc-500">
+                    {{ __('While this service is active and billable, the domain is renewed with the service and not billed separately.') }}
+                    <flux:link :href="route('billing.domains.edit', $linked_domain_id)" wire:navigate>{{ __('Open domain') }}</flux:link>
+                </flux:text>
+            @elseif ($client_id && $clientDomains->isEmpty())
+                <flux:text class="text-sm text-zinc-500">{{ __('This client has no domain records yet.') }}</flux:text>
+            @endif
+        </div>
+
+        @if (! $linked_domain_id)
             <flux:checkbox wire:model.live="create_domain" :label="__('Create domain record now (same client)')" />
-        @else
-            <flux:callout variant="subtle">{{ __('This service is already linked to a domain record.') }}</flux:callout>
         @endif
 
-        @if ($create_domain && ! $service?->domain_id)
+        @if ($create_domain && ! $linked_domain_id)
             <flux:card class="space-y-4 p-4">
                 <flux:heading size="sm">{{ __('New domain') }}</flux:heading>
                 <flux:select wire:model.live="domain_registrar_id" :label="__('Registrar')" required>

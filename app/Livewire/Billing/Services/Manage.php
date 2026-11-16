@@ -66,6 +66,9 @@ class Manage extends Component
 
     public bool $create_domain = false;
 
+    /** Existing domain record (same client) linked to this service; null = none. */
+    public ?int $linked_domain_id = null;
+
     public ?int $domain_registrar_id = null;
 
     public ?int $domain_registrar_tld_id = null;
@@ -139,6 +142,7 @@ class Manage extends Component
                     ? $this->associated_domain
                     : $service->domain->fqdn;
             }
+            $this->linked_domain_id = $service->domain_id;
             $this->create_domain = false;
         } else {
             $cid = request()->integer('client_id');
@@ -160,9 +164,28 @@ class Manage extends Component
         }
     }
 
+    public function updatedLinkedDomainId(mixed $value): void
+    {
+        $this->linked_domain_id = (int) $value > 0 ? (int) $value : null;
+
+        if ($this->linked_domain_id === null) {
+            return;
+        }
+
+        $this->create_domain = false;
+
+        $fqdn = Domain::query()
+            ->whereKey($this->linked_domain_id)
+            ->where('client_id', $this->client_id)
+            ->value('fqdn');
+        if ($fqdn) {
+            $this->associated_domain = $fqdn;
+        }
+    }
+
     public function updatedCreateDomain(bool $value): void
     {
-        if (! $value || $this->service?->domain_id) {
+        if (! $value || $this->linked_domain_id) {
             return;
         }
         if ($this->domain_registered_at === '') {
@@ -259,6 +282,8 @@ class Manage extends Component
         if ($this->service !== null) {
             return;
         }
+        // Domains belong to a client, so a link chosen for another client is no longer valid.
+        $this->linked_domain_id = null;
         $cid = (int) $value;
         if ($cid <= 0) {
             return;
@@ -319,6 +344,7 @@ class Manage extends Component
             $this->service->update($updates);
         });
 
+        $this->linked_domain_id = $this->service->domain_id;
         $this->client_id = $newClient->id;
         $this->currency = $newClient->currency;
         $this->service->load([
@@ -361,15 +387,24 @@ class Manage extends Component
             'notes' => ['nullable', 'string'],
             'associated_domain' => ['nullable', 'string', 'max:255'],
             'create_domain' => ['boolean'],
+            'linked_domain_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('domains', 'id')->where('client_id', $this->client_id),
+            ],
         ];
 
         if ($this->service === null) {
             $rules['client_id'] = ['required', 'exists:clients,id'];
         }
 
-        $this->validate($rules);
+        $this->linked_domain_id = $this->linked_domain_id ? (int) $this->linked_domain_id : null;
 
-        $canRegisterDomain = ! $this->service?->domain_id;
+        $this->validate($rules, [
+            'linked_domain_id.exists' => __('The selected domain does not belong to this client.'),
+        ]);
+
+        $canRegisterDomain = $this->linked_domain_id === null;
         if ($this->create_domain && $canRegisterDomain) {
             $this->domain_registrar_id = (int) $this->domain_registrar_id;
             $this->domain_registrar_tld_id = $this->domain_registrar_tld_id ? (int) $this->domain_registrar_tld_id : null;
@@ -449,7 +484,7 @@ class Manage extends Component
             }
         }
 
-        $domainId = $this->service?->domain_id;
+        $domainId = $this->linked_domain_id;
         $isNew = $this->service === null;
 
         DB::transaction(function () use (&$domainId, $canRegisterDomain, $isNew) {
@@ -798,6 +833,12 @@ class Manage extends Component
             'registrarTldPriceOperations' => RegistrarTldPriceOperation::cases(),
             'domainTldPrices' => $domainTldPrices,
             'domainStatuses' => DomainStatus::cases(),
+            'clientDomains' => $this->client_id
+                ? Domain::query()
+                    ->where('client_id', $this->client_id)
+                    ->orderBy('fqdn')
+                    ->get(['id', 'fqdn', 'status'])
+                : collect(),
             'recipientEmail' => $this->service?->client?->email,
             'emailTemplates' => $this->service
                 ? EmailTemplate::query()
