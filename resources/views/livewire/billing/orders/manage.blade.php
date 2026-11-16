@@ -40,6 +40,12 @@
             <flux:input wire:model="issued_at" type="date" :label="__('Issued')" />
             <flux:input wire:model="due_at" type="date" :label="__('Due')" />
         </div>
+        @if ($this->manualPaidSkipsRenewal())
+            <flux:callout variant="warning" icon="exclamation-triangle">
+                <flux:callout.heading>{{ __('Linked services and domains will not be renewed') }}</flux:callout.heading>
+                <flux:callout.text>{{ __('Changing the status to Paid here does not extend due dates. To renew them, record a completed payment for the order total instead.') }}</flux:callout.text>
+            </flux:callout>
+        @endif
         <flux:input wire:model="paid_at" type="date" :label="__('Paid at')" />
         <flux:textarea wire:model="notes" :label="__('Notes')" rows="2" />
 

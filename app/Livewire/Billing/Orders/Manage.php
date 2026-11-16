@@ -65,6 +65,9 @@ class Manage extends Component
                 'unit_amount_input' => number_format($item->unit_amount_minor / 100, 2, '.', ''),
                 'tax_amount_input' => number_format($item->tax_amount_minor / 100, 2, '.', ''),
                 'service_id' => $item->service_id,
+                // Not editable in the form, but must survive the delete/re-create on save
+                // so paying the order still renews the linked domain.
+                'domain_id' => $item->domain_id,
             ])->values()->all();
         } else {
             $this->number = 'ORD-'.now()->format('Ymd').'-'.Str::upper(Str::random(6));
@@ -271,6 +274,7 @@ class Manage extends Component
                     'unit_amount_minor' => $unitMinor,
                     'tax_amount_minor' => $taxMinor,
                     'service_id' => $row['service_id'] ?: null,
+                    'domain_id' => $row['domain_id'] ?? null,
                 ]);
             }
 
@@ -396,6 +400,15 @@ class Manage extends Component
     private function orderIsPaid(): bool
     {
         return OrderStatus::tryFrom($this->status) === OrderStatus::Paid;
+    }
+
+    /**
+     * Setting the status to Paid by hand does not renew linked services/domains;
+     * only recording a completed payment does.
+     */
+    public function manualPaidSkipsRenewal(): bool
+    {
+        return $this->orderIsPaid() && $this->order?->renewal_applied_at === null;
     }
 
     private function ensureEmailTemplateSlugIsValid(): void
