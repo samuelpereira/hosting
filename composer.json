@@ -1,13 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/livewire-starter-kit",
+    "name": "caetanix/app-hosting",
     "type": "project",
-    "description": "The official Laravel starter kit for Livewire.",
-    "keywords": [
-        "laravel",
-        "framework"
-    ],
-    "license": "MIT",
+    "description": "Hosting and domain billing management for Caetanix.",
+    "license": "proprietary",
     "require": {
         "php": "^8.4",
         "laravel/fortify": "^1.34",
