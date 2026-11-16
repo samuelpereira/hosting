@@ -296,10 +296,13 @@ class Manage extends Component
             ->whereKey($transactionId)
             ->firstOrFail();
 
-        $transaction->delete();
+        DB::transaction(function () use ($transaction) {
+            $transaction->delete();
 
-        $this->order->refresh();
-        $this->order->syncPaymentStatusFromTransactions();
+            $this->order->refresh();
+            $this->order->syncPaymentStatusFromTransactions();
+        });
+
         $this->order->refresh();
 
         $this->status = $this->order->status->value;

@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Transaction;
 use Flux\Flux;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -131,10 +132,14 @@ class Manage extends Component
 
         if ($this->transaction) {
             unset($payload['order_id']);
-            $this->transaction->update($payload);
+            // Payment and order status/renewal succeed or fail together.
+            DB::transaction(function () use ($payload) {
+                $this->transaction->update($payload);
+                $this->transaction->order?->applyCompletedPayment($this->transaction);
+            });
+            // File storage cannot be rolled back, so handle it after the commit.
             $this->syncDocument($this->transaction);
             $this->transaction->refresh();
-            $this->transaction->order?->applyCompletedPayment($this->transaction);
             Flux::toast(variant: 'success', text: __('Transaction updated.'));
             $this->redirect(route('billing.transactions.edit', $this->transaction), navigate: true);
 
@@ -146,9 +151,13 @@ class Manage extends Component
 
         $payload['reference'] = $this->reference;
 
-        $tx = Transaction::query()->create($payload);
+        $tx = DB::transaction(function () use ($payload) {
+            $tx = Transaction::query()->create($payload);
+            $tx->order?->applyCompletedPayment($tx);
+
+            return $tx;
+        });
         $this->syncDocument($tx);
-        $tx->order?->applyCompletedPayment($tx);
         Flux::toast(variant: 'success', text: __('Transaction created.'));
         $this->redirect(route('billing.transactions.edit', $tx), navigate: true);
     }

@@ -6,6 +6,7 @@ use App\Enums\TransactionMethod;
 use App\Enums\TransactionStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -18,8 +19,10 @@ class Transaction extends Model
 
     protected static function booted(): void
     {
-        static::deleting(function (Transaction $transaction): void {
-            $transaction->deleteDocumentFile();
+        // Remove the file only once the delete is committed, so a rolled-back
+        // delete does not leave the transaction pointing at a missing document.
+        static::deleted(function (Transaction $transaction): void {
+            DB::afterCommit(fn () => $transaction->deleteDocumentFile());
         });
     }
 
