@@ -9,12 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Order extends Model
 {
     protected $fillable = [
         'whmcs_id', 'client_id', 'number', 'status', 'currency', 'subtotal_minor', 'tax_minor', 'irs_minor', 'total_minor',
-        'issued_at', 'due_at', 'paid_at', 'notes',
+        'issued_at', 'due_at', 'paid_at', 'renewal_applied_at', 'notes',
     ];
 
     protected function casts(): array
@@ -24,6 +25,7 @@ class Order extends Model
             'issued_at' => 'datetime',
             'due_at' => 'datetime',
             'paid_at' => 'datetime',
+            'renewal_applied_at' => 'datetime',
         ];
     }
 
@@ -160,55 +162,65 @@ HTML;
         ]);
     }
 
+    /**
+     * Re-evaluate the order after a transaction was created or changed.
+     * Partial payments keep the order unpaid; see syncPaymentStatusFromTransactions().
+     */
     public function applyCompletedPayment(Transaction $transaction): void
     {
-        if ($transaction->order_id !== $this->id || $transaction->status !== TransactionStatus::Completed) {
+        if ($transaction->order_id !== $this->id) {
             return;
         }
 
-        $markingPaid = $this->status !== OrderStatus::Paid;
-
-        $this->update([
-            'status' => OrderStatus::Paid,
-            'paid_at' => $transaction->paid_at,
-        ]);
-
-        if ($markingPaid) {
-            $this->extendLinkedServicesAndDomains();
-        }
+        $this->syncPaymentStatusFromTransactions();
     }
 
-    /** Extend due dates on services and domains linked to this order's line items. */
+    /**
+     * Extend due dates on services and domains linked to this order's line items.
+     * Runs at most once per order, so un-paying and re-paying never extends twice.
+     */
     public function extendLinkedServicesAndDomains(): void
     {
-        (new OrderLinkedAssetRenewal($this))->apply();
-    }
-
-    public function syncPaymentStatusFromTransactions(): void
-    {
-        $completedQuery = $this->transactions()->where('status', TransactionStatus::Completed);
-        $paidMinor = (int) $completedQuery->sum('amount_minor');
-
-        if ($paidMinor >= $this->total_minor) {
-            $markingPaid = $this->status !== OrderStatus::Paid;
-            $latest = (clone $completedQuery)->orderByDesc('paid_at')->orderByDesc('id')->first();
-            $this->update([
-                'status' => OrderStatus::Paid,
-                'paid_at' => $latest?->paid_at,
-            ]);
-
-            if ($markingPaid) {
-                $this->extendLinkedServicesAndDomains();
-            }
-
+        if ($this->renewal_applied_at !== null) {
             return;
         }
 
-        if ($this->status === OrderStatus::Paid) {
-            $this->update([
-                'status' => OrderStatus::Unpaid,
-                'paid_at' => null,
-            ]);
-        }
+        (new OrderLinkedAssetRenewal($this))->apply();
+
+        $this->update(['renewal_applied_at' => now()]);
+    }
+
+    /**
+     * Mark the order paid only when completed transactions cover the total;
+     * otherwise revert a paid order back to unpaid.
+     */
+    public function syncPaymentStatusFromTransactions(): void
+    {
+        DB::transaction(function () {
+            $completedQuery = $this->transactions()->where('status', TransactionStatus::Completed);
+            $paidMinor = (int) $completedQuery->sum('amount_minor');
+
+            if ($paidMinor >= $this->total_minor) {
+                $markingPaid = $this->status !== OrderStatus::Paid;
+                $latest = (clone $completedQuery)->orderByDesc('paid_at')->orderByDesc('id')->first();
+                $this->update([
+                    'status' => OrderStatus::Paid,
+                    'paid_at' => $latest?->paid_at,
+                ]);
+
+                if ($markingPaid) {
+                    $this->extendLinkedServicesAndDomains();
+                }
+
+                return;
+            }
+
+            if ($this->status === OrderStatus::Paid) {
+                $this->update([
+                    'status' => OrderStatus::Unpaid,
+                    'paid_at' => null,
+                ]);
+            }
+        });
     }
 }

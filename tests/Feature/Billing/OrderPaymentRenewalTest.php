@@ -233,3 +233,122 @@ test('payment does not double-extend dates when order is already paid', function
 
     expect($service->refresh()->due_at?->format('Y-m-d'))->toBe('2026-05-01');
 });
+
+function createPaymentRenewalServiceOrder(string $slug, int $totalMinor = 20_00): array
+{
+    $client = Client::query()->create([
+        'name' => 'Partial Client',
+        'email' => $slug.'@test.example',
+        'currency' => 'EUR',
+        'is_active' => true,
+    ]);
+
+    $service = Service::query()->create([
+        'client_id' => $client->id,
+        'product_id' => Product::query()->create([
+            'type' => ProductType::Hosting,
+            'name' => 'Hosting',
+            'slug' => $slug,
+            'is_active' => true,
+        ])->id,
+        'status' => ServiceStatus::Active,
+        'currency' => 'EUR',
+        'interval_unit' => IntervalUnit::Month,
+        'interval_count' => 1,
+        'due_at' => '2026-05-01',
+    ]);
+
+    $order = Order::query()->create([
+        'client_id' => $client->id,
+        'number' => 'ORD-'.strtoupper($slug),
+        'status' => OrderStatus::Unpaid,
+        'currency' => 'EUR',
+        'subtotal_minor' => $totalMinor,
+        'tax_minor' => 0,
+        'total_minor' => $totalMinor,
+        'issued_at' => now(),
+    ]);
+
+    OrderItem::query()->create([
+        'order_id' => $order->id,
+        'position' => 0,
+        'type' => OrderItemType::Service,
+        'description' => 'Hosting renewal',
+        'quantity' => 1,
+        'unit_amount_minor' => $totalMinor,
+        'tax_amount_minor' => 0,
+        'service_id' => $service->id,
+    ]);
+
+    return [$order, $service];
+}
+
+function payOrder(Order $order, int $amountMinor, string $status = 'completed'): Transaction
+{
+    $transaction = Transaction::query()->create([
+        'order_id' => $order->id,
+        'status' => TransactionStatus::from($status),
+        'currency' => 'EUR',
+        'amount_minor' => $amountMinor,
+        'paid_at' => now(),
+    ]);
+
+    $order->refresh()->applyCompletedPayment($transaction);
+
+    return $transaction;
+}
+
+test('partial payment keeps order unpaid and does not extend service', function () {
+    Carbon::setTestNow('2026-05-20');
+
+    [$order, $service] = createPaymentRenewalServiceOrder('partial-one');
+
+    payOrder($order, 5_00);
+
+    expect($order->refresh()->status)->toBe(OrderStatus::Unpaid)
+        ->and($order->paid_at)->toBeNull()
+        ->and($order->renewal_applied_at)->toBeNull()
+        ->and($service->refresh()->due_at?->format('Y-m-d'))->toBe('2026-05-01');
+});
+
+test('payments summing to the total mark order paid and extend once', function () {
+    Carbon::setTestNow('2026-05-20');
+
+    [$order, $service] = createPaymentRenewalServiceOrder('partial-two');
+
+    payOrder($order, 5_00);
+    payOrder($order, 15_00);
+
+    expect($order->refresh()->status)->toBe(OrderStatus::Paid)
+        ->and($order->renewal_applied_at)->not->toBeNull()
+        ->and($service->refresh()->due_at?->format('Y-m-d'))->toBe('2026-06-01');
+});
+
+test('pending transaction does not count towards payment', function () {
+    Carbon::setTestNow('2026-05-20');
+
+    [$order, $service] = createPaymentRenewalServiceOrder('partial-pending');
+
+    payOrder($order, 20_00, TransactionStatus::Pending->value);
+
+    expect($order->refresh()->status)->toBe(OrderStatus::Unpaid)
+        ->and($service->refresh()->due_at?->format('Y-m-d'))->toBe('2026-05-01');
+});
+
+test('deleting a payment and paying again does not extend dates twice', function () {
+    Carbon::setTestNow('2026-05-20');
+
+    [$order, $service] = createPaymentRenewalServiceOrder('repay');
+
+    $first = payOrder($order, 20_00);
+    expect($service->refresh()->due_at?->format('Y-m-d'))->toBe('2026-06-01');
+
+    $first->delete();
+    $order->refresh()->syncPaymentStatusFromTransactions();
+    expect($order->refresh()->status)->toBe(OrderStatus::Unpaid);
+
+    payOrder($order, 20_00);
+
+    expect($order->refresh()->status)->toBe(OrderStatus::Paid)
+        ->and($service->refresh()->due_at?->format('Y-m-d'))->toBe('2026-06-01');
+});
