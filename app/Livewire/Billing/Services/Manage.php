@@ -17,6 +17,7 @@ use App\Models\RegistrarTld;
 use App\Models\RegistrarTldPrice;
 use App\Models\Server;
 use App\Models\Service;
+use App\Services\Billing\BillingAutomationRunner;
 use App\Services\Billing\BillingEmailSender;
 use Flux\Flux;
 use Illuminate\Support\Carbon;
@@ -722,6 +723,31 @@ class Manage extends Component
         [$unit, $count] = Domain::billingIntervalFromRegistrarTld($tld, $price);
         $this->domain_interval_unit = $unit->value;
         $this->domain_interval_count = $count;
+    }
+
+    public function renewNow(BillingAutomationRunner $runner): void
+    {
+        if ($this->service === null) {
+            return;
+        }
+
+        $service = $this->service->fresh(['client', 'product', 'domain']);
+
+        if ($service->status !== ServiceStatus::Active || $service->due_at === null) {
+            Flux::toast(variant: 'danger', text: __('Only active services with a due date can be renewed.'));
+
+            return;
+        }
+
+        $order = $runner->renewServiceNow($service);
+
+        if ($order === null) {
+            Flux::toast(variant: 'warning', text: __('A renewal order for this period already exists (or the amount is zero).'));
+
+            return;
+        }
+
+        $this->redirectRoute('billing.orders.edit', $order, navigate: true);
     }
 
     public function sendEmail(BillingEmailSender $sender): void

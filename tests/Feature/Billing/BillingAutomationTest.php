@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\ProductType;
 use App\Enums\ServiceStatus;
 use App\Livewire\Billing\AutomationSettings\Manage as AutomationSettingsManage;
+use App\Livewire\Billing\Services\Manage;
 use App\Models\BillingAutomationSetting;
 use App\Models\BillingTaxSetting;
 use App\Models\Client;
@@ -567,6 +568,60 @@ test('does not run outside configured time without force', function () {
 
     expect($result['skipped_time'])->toBeTrue()
         ->and($result['orders_created'])->toBe(0);
+
+    Carbon::setTestNow();
+});
+
+test('renew now creates the renewal order before the lead time and the automation does not duplicate it', function () {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $this->actingAs($user);
+
+    $client = Client::query()->create([
+        'name' => 'Early Client',
+        'email' => 'early@example.test',
+        'currency' => 'EUR',
+        'is_active' => true,
+    ]);
+
+    $product = Product::query()->create([
+        'type' => ProductType::Hosting,
+        'name' => 'Hosting Plan',
+        'slug' => 'hosting-early',
+        'is_active' => true,
+    ]);
+
+    $dueAt = now()->addDays(90)->startOfDay();
+
+    $service = Service::query()->create([
+        'client_id' => $client->id,
+        'product_id' => $product->id,
+        'currency' => 'EUR',
+        'recurring_amount_minor' => 10_000,
+        'interval_unit' => 'year',
+        'interval_count' => 1,
+        'status' => ServiceStatus::Active,
+        'due_at' => $dueAt,
+    ]);
+
+    expect(app(BillingAutomationRunner::class)->run(force: true)['orders_created'])->toBe(0);
+
+    Livewire::test(Manage::class, ['service' => $service])
+        ->call('renewNow')
+        ->assertRedirect();
+
+    $order = Order::query()->where('client_id', $client->id)->sole();
+    expect($order->status)->toBe(OrderStatus::Unpaid)
+        ->and($order->due_at?->toDateString())->toBe($dueAt->toDateString())
+        ->and($order->items->first()->service_id)->toBe($service->id);
+
+    // Second click and the scheduled run inside the window must not create another order.
+    Livewire::test(Manage::class, ['service' => $service])
+        ->call('renewNow')
+        ->assertNoRedirect();
+
+    Carbon::setTestNow($dueAt->copy()->subDays(14)->setTime(9, 0));
+    expect(app(BillingAutomationRunner::class)->run(force: true)['orders_created'])->toBe(0)
+        ->and(Order::query()->where('client_id', $client->id)->count())->toBe(1);
 
     Carbon::setTestNow();
 });

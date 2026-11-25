@@ -199,6 +199,24 @@ class BillingAutomationRunner
         return $sent;
     }
 
+    /**
+     * Create the renewal order for the service's current due date right now,
+     * ignoring the configured lead time (e.g. the client wants to pay early).
+     * No email is sent; the order is sent manually from the order page.
+     * Returns null when an order for this period already exists or the service is not renewable.
+     */
+    public function renewServiceNow(Service $service): ?Order
+    {
+        if ($service->due_at === null) {
+            return null;
+        }
+
+        return $this->orderFactory->createForService(
+            $service,
+            Carbon::instance($service->due_at)->startOfDay(),
+        );
+    }
+
     private function sendOrderCreatedEmail(BillingAutomationSetting $settings, Order $order): void
     {
         if (! $settings->send_order_created_email) {

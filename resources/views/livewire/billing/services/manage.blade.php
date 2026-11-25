@@ -11,6 +11,15 @@
                 wire:navigate
                 icon="document-text"
             >{{ __('Generate order') }}</flux:button>
+            @if ($service->status === \App\Enums\ServiceStatus::Active && $service->due_at)
+                <flux:button
+                    size="sm"
+                    variant="outline"
+                    icon="arrow-path"
+                    wire:click="renewNow"
+                    wire:confirm="{{ __('Create the renewal order for :date now?', ['date' => $service->due_at->format('Y-m-d')]) }}"
+                >{{ __('Renew now') }}</flux:button>
+            @endif
         </div>
     @endif
 
